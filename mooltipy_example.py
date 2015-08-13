@@ -2,8 +2,9 @@
 #
 # Mooltipy development and example stub.
 
-from mooltipy import *
+from mooltipy import Mooltipass
 
+import logging
 import time
 
 

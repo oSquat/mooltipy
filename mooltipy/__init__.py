@@ -1,14 +1,17 @@
-#!/usr/bin/env python
-#
-# Mooltipy - a python library for the Mooltipass
-#
-# Mostly ripped out of mooltipas_coms.py from the mooltipass project (relative
-# path /tools/python_comms/mooltipass_coms.py). This is my learning guide with
-# a goal of creating a non-browser mooltipas management utility.
-#
-# If you are having difficulty with core stuff (e.g. establishing a connection
-# to the mooltipass) it may be wise to compare with that file as I have trimmed
-# things down for simplicity.
+"""Mooltipy - a python library for the Mooltipass
+
+Mostly ripped out of mooltipas_coms.py from the mooltipass project (relative
+path /tools/python_comms/mooltipass_coms.py). This is my learning guide with
+a goal of creating a non-browser mooltipas management utility.
+
+If you are having difficulty with core stuff (e.g. establishing a connection
+to the mooltipass) it may be wise to compare with that file as I have trimmed
+things down for simplicity.
+
+Classes:
+    Mooltipass -- Encapsulates access to a Mooltipass on your system
+
+"""
 
 from array import array
 
@@ -22,10 +25,12 @@ import usb.core
 
 from .constants import *
 
-CMD_INDEX = 0x01
-DATA_INDEX = 0x02
 
 class Mooltipass(object):
+    """"""
+
+    _CMD_INDEX = 0x01
+    _DATA_INDEX = 0x02
 
     _epin = None
     _epout = None
@@ -34,6 +39,10 @@ class Mooltipass(object):
     _intf = None
 
     def __init__(self):
+        """Create object representing a Mooltipass.
+
+        Raises RuntimeError on failure.
+        """
 
         USB_VID = 0x16D0
         USB_PID = 0x09A0
@@ -72,7 +81,7 @@ class Mooltipass(object):
 
         # Match the first IN endpoint
         self._epin = usb.util.find_descriptor(
-                self._intf, 
+                self._intf,
                 custom_match = lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN)
         if self._epin is None:
             self._hid_device.reset()
@@ -80,16 +89,17 @@ class Mooltipass(object):
 
 
     def send_packet(self, cmd, data):
-        """Sends generic HID a packet.
+        """Sends a packet to our mooltipass.
 
-        epout?
-        cmd is command identifier
-        data is array or struct
+        Keyword arguments:
+            cmd -- command to send
+            data -- array [or struct?]
         """
 
         data_len = 0
         if data is not None:
             data_len = len(data)
+
 
         # Data sent over to the generic HID should be in 64 byte packets and in
         # the following array structure:
@@ -110,8 +120,7 @@ class Mooltipass(object):
 
 
     def ping(self):
-        """Ping the mooltipass. Returns True / False on success / failure."""
-
+        """Ping the mooltipass; return True / False on success / failure."""
         try:
             # TODO: What other method for obtaining bytes than random can I use?
             #   Try milliseconds time.time() since we already need time module
@@ -124,8 +133,8 @@ class Mooltipass(object):
 
             recv = None
             while recv is None or \
-                    recv[DATA_INDEX] != send_data[0] or \
-                    recv[DATA_INDEX+1] != send_data[1]:
+                    recv[self._DATA_INDEX] != send_data[0] or \
+                    recv[self._DATA_INDEX+1] != send_data[1]:
 
                 recv = self._epin.read(self._epin.wMaxPacketSize, timeout=1000)
 
@@ -138,16 +147,14 @@ class Mooltipass(object):
 
 
     def get_status(self):
-        """Returns raw mooltipass status."""
-
+        """Return raw mooltipass status as int."""
         self.send_packet(CMD_MOOLTIPASS_STATUS, None)
         return self._epin.read(
-                self._epin.wMaxPacketSize, timeout=1000)[DATA_INDEX]
+                self._epin.wMaxPacketSize, timeout=1000)[self._DATA_INDEX]
 
 
     def get_version(self):
         """Get mooltipass firmware version."""
-
         #TODO: Figure out how to read the string version number?
         self.send_packet(CMD_VERSION, None)
         return self._epin.read(self._epin.wMaxPacketSize, timeout=10000)
@@ -156,9 +163,13 @@ class Mooltipass(object):
     def start_memory_management(self, timeout=20000):
         """Enter memory management mode.
 
-        timeout - controls how long the user has to enter pin on the 
-            mooltipass. Note: Mooltipass times out after ~17.5 seconds of 
-            inaction."""
+        Keyword argument:
+            timeout -- how long to wait for user to complete entering pin 
+                    (default 20000).
+
+            Note: Mooltipass times out after ~17.5 seconds of inaction
+                    inaction.
+        """
 
         # Memory management mode can only be accessed if the unit is unlocked.
         if not self.get_status() == 0x05:
@@ -169,14 +180,11 @@ class Mooltipass(object):
         recv = self._epin.read(self._epin.wMaxPacketSize, timeout=timeout)
         return (lambda recv: False if recv[0] == 0 else True)(recv)
 
-        #TODO: Mooltipass always returns true to CMD_START_MEMORYMGMT
-        #      * A True is returned regardless of whether user accepts or
-        #        dismisses request to enter memory management mode.
+        #TODO: Mooltipass always returns true to CMD_START_MEMORYMGMT?
 
 
     def end_memory_management(self):
         """End memory management mode."""
-
         self.send_packet(CMD_END_MEMORYMGMT, None)
         recv = self._epin.read(self._epin.wMaxPacketSize, timeout=1000)
         return (lambda recv: False if recv[0] == 0 else True)(recv)

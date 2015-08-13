@@ -13,7 +13,7 @@ user@box:~/mooltipy/$ . ./env/bin/activate
 
 To utilize the class:
 ```python
-from mooltipy import *
+from mooltipy import Mooltipass
 
 import sys
 
