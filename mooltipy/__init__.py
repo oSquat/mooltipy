@@ -14,14 +14,13 @@ from array import array
 
 import logging
 import platform
-import usb.core
 import random
 import sys
 import time
 
-CMD_PING = 0xa1
+import usb.core
 
-CMD_MOOLTIPASS_STATUS   = 0xB9
+from .constants import *
 
 CMD_INDEX = 0x01
 DATA_INDEX = 0x02
@@ -142,4 +141,43 @@ class Mooltipass(object):
         """Returns raw mooltipass status."""
 
         self.send_packet(CMD_MOOLTIPASS_STATUS, None)
+        return self._epin.read(
+                self._epin.wMaxPacketSize, timeout=1000)[DATA_INDEX]
+
+
+    def get_version(self):
+        """Get mooltipass firmware version."""
+
+        #TODO: Figure out how to read the string version number?
+        self.send_packet(CMD_VERSION, None)
         return self._epin.read(self._epin.wMaxPacketSize, timeout=10000)
+
+
+    def start_memory_management(self, timeout=20000):
+        """Enter memory management mode.
+
+        timeout - controls how long the user has to enter pin on the 
+            mooltipass. Note: Mooltipass times out after ~17.5 seconds of 
+            inaction."""
+
+        # Memory management mode can only be accessed if the unit is unlocked.
+        if not self.get_status() == 0x05:
+            raise RuntimeError('Cannot enter memory management mode; ' + \
+                    'mooltipass not unlocked.')
+
+        self.send_packet(CMD_START_MEMORYMGMT, None)
+        recv = self._epin.read(self._epin.wMaxPacketSize, timeout=timeout)
+        return (lambda recv: False if recv[0] == 0 else True)(recv)
+
+        #TODO: Mooltipass always returns true to CMD_START_MEMORYMGMT
+        #      * A True is returned regardless of whether user accepts or
+        #        dismisses request to enter memory management mode.
+
+
+    def end_memory_management(self):
+        """End memory management mode."""
+
+        self.send_packet(CMD_END_MEMORYMGMT, None)
+        recv = self._epin.read(self._epin.wMaxPacketSize, timeout=1000)
+        return (lambda recv: False if recv[0] == 0 else True)(recv)
+

@@ -27,25 +27,61 @@ if __name__ == '__main__':
         sys.exit(0)
 
 
-    while True:
-        recv = mooltipass.get_status()
-        if recv is None:
-            print('error')
+    #while True:
+    #    recv = mooltipass.get_status()
+    #    if recv is None:
+    #        print('error')
+    #    else:
+    #        if recv[DATA_INDEX] == 0:
+    #            print('No card inserted')
+    #        elif recv[DATA_INDEX] == 1:
+    #            # Also displays when car is incorrectly inserted
+    #            print('Mooltipass locked')
+    #        elif recv[DATA_INDEX] == 3:
+    #            print('Mooltipass locked, unlocking screen')
+    #        elif recv[DATA_INDEX] == 5:
+    #            print('Mooltipass unlocked')
+    #        elif recv[DATA_INDEX] == 9:
+    #            print('Unknown smart card')
+    #        else:
+    #            print('unknown resp: {0}'.format(str(recv[DATA_INDEX])))
+
+    #    time.sleep(2)
+
+    recv = mooltipass.get_status()
+    if recv is None:
+        print('error')
+    else:
+        if recv == 0:
+            print('No card inserted')
+        elif recv == 1:
+            # Also displays when car is incorrectly inserted
+            print('Mooltipass locked')
+        elif recv == 3:
+            print('Mooltipass locked, unlocking screen')
+        elif recv == 5:
+            print('Mooltipass unlocked')
+        elif recv == 9:
+            print('Unknown smart card')
         else:
-            if recv[DATA_INDEX] == 0:
-                print('No card inserted')
-            elif recv[DATA_INDEX] == 1:
-                print('Mooltipass locked')
-            elif recv[DATA_INDEX] == 3:
-                print('Mooltipass locked, unlocking screen')
-            elif recv[DATA_INDEX] == 5:
-                print('Mooltipass unlocked')
-            elif recv[DATA_INDEX] == 9:
-                print('Unknown smart card')
-            else:
-                print('unknown resp: {0}'.format(str(recv[DATA_INDEX])))
+            print('unknown resp: {0}'.format(str(recv[DATA_INDEX])))
 
-        time.sleep(2)
+    print(mooltipass.start_memory_management())
 
+    print(mooltipass.end_memory_management())
 
     print('fin')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
