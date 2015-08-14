@@ -6,6 +6,7 @@ from mooltipy import Mooltipass
 
 import logging
 import time
+import sys
 
 
 if __name__ == '__main__':
@@ -67,9 +68,15 @@ if __name__ == '__main__':
         else:
             print('unknown resp: {0}'.format(str(recv[DATA_INDEX])))
 
-    print(mooltipass.start_memory_management())
+    #print(mooltipass.start_memory_management())
 
-    print(mooltipass.end_memory_management())
+    #print(mooltipass.end_memory_management())
+
+    while not mooltipass.set_context('another_site2'):
+        print(mooltipass.add_context('another_site2'))
+
+    print(mooltipass.set_login('bob'))
+    print(mooltipass.set_password('f2jf88288flskjf\x0D'))
 
     print('fin')
 

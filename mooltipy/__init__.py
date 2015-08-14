@@ -87,6 +87,11 @@ class Mooltipass(object):
             self._hid_device.reset()
             raise RuntimeError("Couldn't match the first IN endpoint?")
 
+    @staticmethod
+    def _tf_return(recv):
+        """Return True or False based on typical command response."""
+        DATA_INDEX = 2
+        return (lambda recv: False if recv[DATA_INDEX] == 0 else True)(recv)
 
     def send_packet(self, cmd, data):
         """Sends a packet to our mooltipass.
@@ -99,7 +104,6 @@ class Mooltipass(object):
         data_len = 0
         if data is not None:
             data_len = len(data)
-
 
         # Data sent over to the generic HID should be in 64 byte packets and in
         # the following array structure:
@@ -117,7 +121,6 @@ class Mooltipass(object):
             arraytosend.extend(data)
 
         self._epout.write(arraytosend)
-
 
     def ping(self):
         """Ping the mooltipass; return True / False on success / failure."""
@@ -145,20 +148,51 @@ class Mooltipass(object):
             logging.error(e)
             return False
 
-
     def get_status(self):
         """Return raw mooltipass status as int."""
         self.send_packet(CMD_MOOLTIPASS_STATUS, None)
         return self._epin.read(
-                self._epin.wMaxPacketSize, timeout=1000)[self._DATA_INDEX]
-
+                self._epin.wMaxPacketSize, timeout=5000)[self._DATA_INDEX]
 
     def get_version(self):
         """Get mooltipass firmware version."""
         #TODO: Figure out how to read the string version number?
         self.send_packet(CMD_VERSION, None)
-        return self._epin.read(self._epin.wMaxPacketSize, timeout=10000)
+        return self._epin.read(self._epin.wMaxPacketSize, timeout=5000)
 
+    def set_context(self, context):
+        """Set mooltipass context.
+
+        Returns True if successful, False if context is unknown and
+        None if no card is in the mooltipass.
+        """
+
+        self.send_packet(CMD_CONTEXT, array('B', context + b'\x00'))
+        recv = (self._epin.read(self._epin.wMaxPacketSize, timeout=10000))
+        if recv[self._DATA_INDEX] == 0:
+            return False
+        if recv[self._DATA_INDEX] == 1:
+            return True
+        if recv[self._DATA_INDEX] == 3:
+            return None
+
+    def set_login(self, login):
+        """Set a login."""
+        self.send_packet(CMD_SET_LOGIN, array('B', login + b'\00'))
+        recv = (self._epin.read(self._epin.wMaxPacketSize, timeout=10000))
+        return self._tf_return(recv)
+
+    def add_context(self, context):
+        """Add a context."""
+        self.send_packet(CMD_ADD_CONTEXT, array('B', context + b'\x00'))
+        recv = (self._epin.read(self._epin.wMaxPacketSize, timeout=10000))
+        return self._tf_return(recv)
+
+    def set_password(self, password):
+        """Add a password."""
+        self.send_packet(CMD_SET_PASSWORD, array('B', password + b'\x00'))
+        recv = (self._epin.read(self._epin.wMaxPacketSize, timeout=10000))
+        return self._tf_return(recv)
 
     def start_memory_management(self, timeout=20000):
         """Enter memory management mode.
@@ -178,14 +212,11 @@ class Mooltipass(object):
 
         self.send_packet(CMD_START_MEMORYMGMT, None)
         recv = self._epin.read(self._epin.wMaxPacketSize, timeout=timeout)
-        return (lambda recv: False if recv[0] == 0 else True)(recv)
-
-        #TODO: Mooltipass always returns true to CMD_START_MEMORYMGMT?
-
+        return self._tf_return(recv)
 
     def end_memory_management(self):
         """End memory management mode."""
         self.send_packet(CMD_END_MEMORYMGMT, None)
         recv = self._epin.read(self._epin.wMaxPacketSize, timeout=1000)
-        return (lambda recv: False if recv[0] == 0 else True)(recv)
+        return self._tf_return(recv)
 
