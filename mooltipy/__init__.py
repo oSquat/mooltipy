@@ -105,6 +105,7 @@ class Mooltipass(object):
         if data is not None:
             data_len = len(data)
 
+
         # Data sent over to the generic HID should be in 64 byte packets and in
         # the following array structure:
         #   buffer[0]  = length of data
@@ -122,12 +123,30 @@ class Mooltipass(object):
 
         self._epout.write(arraytosend)
 
+    def recv_packet(self, timeout=5000):
+        """Receives a packet from the mooltipass.
+
+        Keyword arguments:
+            timeout -- how long to wait for user to complete entering pin
+                    (default 20000).
+        """
+        recv = None
+        # The mooltipass should reply with 0xB9 if the user is currently
+        # entering hs PIN, but I don't see this behavior
+        while True:
+            recv = self._epin.read(self._epin.wMaxPacketSize, timeout=timeout)
+            if recv is not None and recv[self._DATA_INDEX] != 0xB9:
+                break
+            print(recv)
+            time.sleep(.5)
+        return recv
+
     def ping(self):
-        """Ping the mooltipass; return True / False on success / failure."""
+        """Ping the mooltipass (0xA1)
+
+        Ping the mooltipass and return true/false on success/failure.
+        """
         try:
-            # TODO: What other method for obtaining bytes than random can I use?
-            #   Try milliseconds time.time() since we already need time module
-            #   ...or maybe we can eliminate time from use instead probably no need
             send_data = array('B')
             send_data.append(random.randint(0,255))
             send_data.append(random.randint(0,255))
@@ -139,7 +158,7 @@ class Mooltipass(object):
                     recv[self._DATA_INDEX] != send_data[0] or \
                     recv[self._DATA_INDEX+1] != send_data[1]:
 
-                recv = self._epin.read(self._epin.wMaxPacketSize, timeout=1000)
+                recv = self.recv_packet()
 
             logging.info("Mooltipass replied to our ping message")
             return True
@@ -148,27 +167,21 @@ class Mooltipass(object):
             logging.error(e)
             return False
 
-    def get_status(self):
-        """Return raw mooltipass status as int."""
-        self.send_packet(CMD_MOOLTIPASS_STATUS, None)
-        return self._epin.read(
-                self._epin.wMaxPacketSize, timeout=5000)[self._DATA_INDEX]
-
     def get_version(self):
-        """Get mooltipass firmware version."""
+        """Get mooltipass firmware version. (0xA2)"""
         #TODO: Figure out how to read the string version number?
         self.send_packet(CMD_VERSION, None)
-        return self._epin.read(self._epin.wMaxPacketSize, timeout=5000)
+        return self.recv_packet()
 
     def set_context(self, context):
-        """Set mooltipass context.
+        """Set mooltipass context. (0xA3)
 
         Returns True if successful, False if context is unknown and
         None if no card is in the mooltipass.
         """
 
         self.send_packet(CMD_CONTEXT, array('B', context + b'\x00'))
-        recv = (self._epin.read(self._epin.wMaxPacketSize, timeout=10000))
+        recv = self.recv_packet(10000)
         if recv[self._DATA_INDEX] == 0:
             return False
         if recv[self._DATA_INDEX] == 1:
@@ -176,26 +189,57 @@ class Mooltipass(object):
         if recv[self._DATA_INDEX] == 3:
             return None
 
-    def set_login(self, login):
-        """Set a login."""
-        self.send_packet(CMD_SET_LOGIN, array('B', login + b'\00'))
-        recv = (self._epin.read(self._epin.wMaxPacketSize, timeout=10000))
-        return self._tf_return(recv)
+    def get_login(self):
+        """Get the login for current context. (0xA4)"""
+        logging.info('Not yet implemented')
+        pass
 
-    def add_context(self, context):
-        """Add a context."""
-        self.send_packet(CMD_ADD_CONTEXT, array('B', context + b'\x00'))
-        recv = (self._epin.read(self._epin.wMaxPacketSize, timeout=10000))
-        return self._tf_return(recv)
+    def get_password(self):
+        """Get the password for current context. (0xA5)"""
+        logging.info('Not yet implemented')
+        pass
+
+    def set_login(self, login):
+        """Set a login. (0xA6)"""
+        self.send_packet(CMD_SET_LOGIN, array('B', login + b'\x00'))
+        return self._tf_return(self.recv_packet())
 
     def set_password(self, password):
-        """Add a password."""
+        """Set a password for current context. (0xA7)"""
         self.send_packet(CMD_SET_PASSWORD, array('B', password + b'\x00'))
-        recv = (self._epin.read(self._epin.wMaxPacketSize, timeout=10000))
-        return self._tf_return(recv)
+        return self._tf_return(self.recv_packet())
+
+    def check_password(self, password):
+        """Compare given password to set password for context. (0xA8)
+
+        Call check_password() to avoid calling set_password() and 
+        prompting the user to overwrite a value that already exists.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def add_context(self, context):
+        """Add a context. (0xA9)"""
+        self.send_packet(CMD_ADD_CONTEXT, array('B', context + b'\x00'))
+        return self._tf_return(self.recv_packet())
+
+    def set_bootloader_password(self, password):
+        """??? (0xAA)"""
+        logging.info('Not yet implemented')
+        pass
+
+    def jump_to_bootloader(self):
+        """??? (0xAB)"""
+        logging.info('Not yet implemented')
+        pass
+
+    def get_random_number(self):
+        """Get 32 random bytes. (0xAC)"""
+        logging.info('Not yet implemented')
+        pass
 
     def start_memory_management(self, timeout=20000):
-        """Enter memory management mode.
+        """Enter memory management mode. (0xAD)
 
         Keyword argument:
             timeout -- how long to wait for user to complete entering pin 
@@ -211,12 +255,17 @@ class Mooltipass(object):
                     'mooltipass not unlocked.')
 
         self.send_packet(CMD_START_MEMORYMGMT, None)
-        recv = self._epin.read(self._epin.wMaxPacketSize, timeout=timeout)
-        return self._tf_return(recv)
+        return self._tf_return(self.recv_packet())
+
+    # ... lots of commands ...
 
     def end_memory_management(self):
-        """End memory management mode."""
+        """End memory management mode. (0xD3)"""
         self.send_packet(CMD_END_MEMORYMGMT, None)
-        recv = self._epin.read(self._epin.wMaxPacketSize, timeout=1000)
-        return self._tf_return(recv)
+        return self._tf_return(self.recv_packet())
 
+    # TODO: Make a status property and this function private
+    def get_status(self):
+        """Return raw mooltipass status as int. (0xB9)"""
+        self.send_packet(CMD_MOOLTIPASS_STATUS, None)
+        return self.recv_packet()[self._DATA_INDEX]
