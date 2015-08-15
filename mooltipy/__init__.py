@@ -222,6 +222,7 @@ class Mooltipass(object):
         """Add a context. (0xA9)"""
         self.send_packet(CMD_ADD_CONTEXT, array('B', context + b'\x00'))
         return self._tf_return(self.recv_packet())
+    # TODO: Is there any way to delete contexts?
 
     def set_bootloader_password(self, password):
         """??? (0xAA)"""
@@ -235,6 +236,8 @@ class Mooltipass(object):
 
     def get_random_number(self):
         """Get 32 random bytes. (0xAC)"""
+        # TODO: Is this intended to be directly used in generation of
+        #   a random password, or as seed in external PRNG?
         logging.info('Not yet implemented')
         pass
 
@@ -257,15 +260,190 @@ class Mooltipass(object):
         self.send_packet(CMD_START_MEMORYMGMT, None)
         return self._tf_return(self.recv_packet())
 
-    # ... lots of commands ...
+    def start_media_import(self):
+        """Request send media to Mooltipass. (0xAE)
+
+        Returns true/false on success/failure.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def media_import(self, data):
+        """Send data to mooltipass. (0xAF)
+
+        Send specially formatted data to the mooltipass as part of a
+        media import. <DOCUMENT FORMAT HERE IF POSSIBLE>
+
+        Returns true/false on success/failure.
+        """
+        #TODO: Ask for pointer to source containing formatting!
+        logging.info('Not yet implemented')
+        pass
+
+    def end_media_import(self):
+        """Request end media to Mooltipass. (0xB0)
+
+        Returns true/false on success/failure.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def set_mooltipass_parameter(self, param_id, value):
+        """Set a mooltipass parameter. (0xB1)
+
+        Arguments:
+            param_id - Parameter ID to set
+            value - Value to set
+
+        Returns true/false on success/failure.
+        """
+        # TODO: Where are paremeters documented?
+        logging.info('Not yet implemented')
+        pass
+
+    def get_mooltipass_parameter(self, param_id):
+        """Retrieve a mooltipass parameter (0xB2).
+
+        Arguments:
+            param_id -- Parameter ID to get
+
+        Returns the parameter value.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def reset_card(self):
+        """Reset inserted card. (0xB3)
+
+        Returns true/false on success/failure.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def read_card_login(self):
+        """Read login stored inside smartcard. (0xB4)
+
+        Returns login or None.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def read_card_password(self):
+        """Read password stored inside the smartcard. (0xB5)
+
+        Mooltipass asks for confirmation.
+
+        Returns password or None.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def set_card_login(self, login):
+        """Set card login stored inside smartcard. (0xB6)
+
+        Mooltipass asks for confirmation.
+
+        Arguments:
+            login -- Login value up to 62 bytes
+
+        Returns true/false on success/failure.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def set_card_password(self, password):
+        """Set password stored inside the smartcard. (0xB7)
+
+        Mooltipass asks for confirmation.
+
+        Arguments:
+            password -- Password value up to 30 bytes.
+
+        Returns true/false on success/failure.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def add_unknown_smartcard(self, cpz, ctr):
+        """Instruct mooltipass to store an unknown smartcard. (0xB8)
+
+        Arguments:
+            ??? Not sure, experiment and review python_comms
+
+        Returns true/false on success/failure.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    # TODO: Make a status property and this function private
+    def get_status(self):
+        """Return raw mooltipass status as int. (0xB9)
+
+        The mooltipass returns a 1 byte bit field:
+            Bit 0 -- Card presence
+            Bit 1 -- Pin unlocking
+            Bit 2 -- Card present and unlocked
+            Bit 3 -- Unknown smart card inserted
+        """
+        # TODO: Interpret all bits; see /source_code/src/USB
+        self.send_packet(CMD_MOOLTIPASS_STATUS, None)
+        return self.recv_packet()[self._DATA_INDEX]
+
+    # Where is 0xBA?
+
+    def set_date(self):
+        """Set current date. (0xBB)"""
+        loggin.info('Not yet implemented')
+        pass
+
+    def set_mooltipass_uid(self):
+        """Set the mooltipass UID. (0xBC)"""
+        loggin.info('Not yet implemented')
+        pass
+
+    def get_mooltipass_uid(self):
+        """Get the mooltipass UID. (0xBD)"""
+        loggin.info('Not yet implemented')
+        pass
+
+    def set_data_context(self, context):
+        """Set the data context. (0xBE)"""
+        logging.info('Not yet implemented')
+        pass
+
+    def add_data_context(self, context):
+        """Add a data context. (0xBF)
+
+        Arguments:
+            context -- Name of context to add.
+
+        Returns true/false on success/failure.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def write_data_context(self, data):
+        """Write to data context in blocks of 32 bytes. (0xC0)
+
+        ???
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def read_data_context(self):
+        """Read data from context in blocks of 32 bytes. (0xC1)
+
+        Get successive 32 byte blocks of data until EOD.
+
+        Returns data or None on error.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    # TODO: Lots of commands...
 
     def end_memory_management(self):
         """End memory management mode. (0xD3)"""
         self.send_packet(CMD_END_MEMORYMGMT, None)
         return self._tf_return(self.recv_packet())
 
-    # TODO: Make a status property and this function private
-    def get_status(self):
-        """Return raw mooltipass status as int. (0xB9)"""
-        self.send_packet(CMD_MOOLTIPASS_STATUS, None)
-        return self.recv_packet()[self._DATA_INDEX]
