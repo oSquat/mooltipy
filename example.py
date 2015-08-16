@@ -2,7 +2,7 @@
 #
 # Mooltipy development and example stub.
 
-from mooltipy import Mooltipass
+from mooltipy import MooltipassClient
 
 import logging
 import time
@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
 
     #hid_device, intf, epin, epout = findHIDDevice(USB_VID, USB_PID, True)
-    mooltipass = Mooltipass()
+    mooltipass = MooltipassClient()
 
     if mooltipass is None:
         sys.exit(0)
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         sys.exit(0)
 
 
-    recv = mooltipass.get_status()
+    recv = mooltipass.status
     if recv is None:
         print('error')
     else:
@@ -52,35 +52,41 @@ if __name__ == '__main__':
 
     #print(mooltipass.end_memory_management())
 
-#    while not mooltipass.set_context('another_site2'):
-#        print(mooltipass.add_context('another_site2'))
 
-#    print(mooltipass.set_login('bob'))
-#    print(mooltipass.set_password('f2jf88288flskjf\x0D'))
+    test_context = False
+    if test_context:
+        while not mooltipass.set_context(b'another_site2'):
+            print(mooltipass.add_context(b'another_site2'))
 
-    context = 'xdat36'
-    while True:
-        if mooltipass.set_data_context(context):
-            print('set context')
-            break
-        print('adding context: ' + context)
-        if not mooltipass.add_data_context(context):
-            print('user decliend to add context.')
-            sys.exit(0)
+        print(mooltipass.set_login(b'bob'))
+        print(mooltipass.set_password(b'f2jf88288flskjf\x0D'))
 
-    from array import array
-    #x = array('B', x[::-1])
-    x = array('B')
-    for i in range(1,512):
-        x.append((512-i)%255)
-        #x.append(i)
+    test_data = True
+    if test_data:
+        context = b'xdat45'
+        while True:
+            if mooltipass.set_data_context(context):
+                print('set context')
+                break
+            print(b'adding context: ' + context)
+            if not mooltipass.add_data_context(context):
+                print('user decliend to add context.')
+                sys.exit(0)
 
-    #print(x)
-    print('sending data -- length is: ' + str(len(x)))
-    #mooltipass.write_data_context(x)
-    #time.sleep(2)
-    print('reading...')
-    mooltipass.read_data_context()
+        from array import array
+        #x = array('B', x[::-1])
+        x = array('B')
+        for i in range(0,512):
+            x.append((512-i)%255)
+            #x.append(i)
+
+        #print(x)
+        print('sending data -- length is: ' + str(len(x)))
+        #mooltipass.write_data_context(x)
+        time.sleep(2)
+
+        print('reading...')
+        mooltipass.read_data_context()
 
     print('fin')
 
