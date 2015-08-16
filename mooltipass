@@ -6,7 +6,7 @@
 from optparse import OptionParser
 import time
 
-from mooltipy import Mooltipass
+from mooltipy import MooltipassClient
 
 def main_options():
     """Handles command-line interface, arguments & options. """
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     (options, args) = main_options()
 
-    mooltipass = Mooltipass()
+    mooltipass = MooltipassClient()
     quiet_bool = False
     while mooltipass.get_status() != 5:
         if not quiet_bool:

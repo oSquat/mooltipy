@@ -104,7 +104,7 @@ class MooltipassClient(_Mooltipass):
         # blocks. The last byte of our data falls somewhere within the
         # last 32 byte block. Prefix the length of our data to the start
         # of the data we were given handle this problem.
-        lod = struct.pack('>H', len(data))
+        lod = struct.pack('>L', len(data))
         ext_data = array('B', lod)
         ext_data.extend(data)
 
@@ -114,8 +114,8 @@ class MooltipassClient(_Mooltipass):
         """Read data from context. Return data as array or None."""
         data = super(MooltipassClient, self).read_data_context()
         # See write_data_context for explanation of lod
-        lod = struct.unpack('>H', data[:2])[0]
-        print('Expecting: ' + str(lod) + ' bytes...')
-        print(data[2:lod+2])
+        lod = struct.unpack('>L', data[:4])[0]
+        logging.debug('Expecting: ' + str(lod) + ' bytes...')
+        return data[4:lod+4]
 
     # TODO: Lots of commands...

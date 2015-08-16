@@ -1,0 +1,84 @@
+#!/usr/bin/env python
+"""Importing & extracting data to and from the Mooltipass."""
+
+from array import array
+import logging
+from optparse import OptionParser
+import time
+
+from mooltipy import MooltipassClient
+
+def main_options():
+    """Handles command-line interface, arguments & options."""
+
+    usage = 'Usage: %prog {IMPORT|EXPORT} CONTEXT FILEPATH\n' + \
+            'Example: %prog import ssh_key ~/.ssh/id_rsa'
+
+    parser = OptionParser(usage)
+
+    (options, args) = parser.parse_args()
+
+    if not args[0].lower() in ['import', 'export']:
+        parser.error('Action must be import or export; see --help.')
+        sys.exit(0)
+
+    if not len(args) == 3:
+        parser.error('Incorrect number of arguments; see --help.')
+        sys.exit(0)
+
+    print(args)
+
+    return (options, args)
+
+if __name__ == '__main__':
+
+    (options, args) = main_options()
+
+    logging.basicConfig(
+            format='%(levelname)s\t %(funcName)s():\t %(message)s',
+            level=logging.DEBUG)
+
+    action = args[0]
+    context = args[1]
+    filepath = args[2]
+
+    mooltipass = MooltipassClient()
+
+    # Ensure Mooltipass status
+    quiet_bool = False
+    while mooltipass.get_status() != 5:
+        if not quiet_bool:
+            print('Insert a card and unlock the Mooltipass...')
+        quiet_bool = True
+        time.sleep(2)
+
+    # Handle context
+    if mooltipass.set_data_context(context):
+        logging.debug('Set context.')
+    else:
+        if action == 'export':
+            print("Context does not exist; can't export.")
+            sys.exit(0)
+        if not mooltipass.add_data_context(context):
+            print('User decliend to add context.')
+            sys.exit(0)
+        logging.debug('Context added')
+
+    if action == 'export':
+        data = mooltipass.read_data_context()
+        with open(filepath, 'wb') as fout:
+            data.tofile(fout)
+    else:
+        with open(filepath, 'rb') as fin:
+            data = array('B',fin.read())
+        mooltipass.write_data_context(data)
+
+    # TODO: Pretty important
+    #   * After importing data, data won't export without cold booting the unit
+    #   * Importing up to 174,000KB works well! Exporting stops ~26KB?
+    #   * Alias extract as acceptable alternative to export because annoying
+    #   * Replace optparse with argparse; python3 compatibility
+    # TODO: Eventually
+    #   * Some indication of progress -- transfer can be slow.
+    #   * List data contexts
+    #   * Delete data contexts
