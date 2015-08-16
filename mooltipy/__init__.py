@@ -18,6 +18,7 @@ from array import array
 import logging
 import platform
 import random
+import struct
 import sys
 import time
 
@@ -93,7 +94,7 @@ class Mooltipass(object):
         DATA_INDEX = 2
         return (lambda recv: False if recv[DATA_INDEX] == 0 else True)(recv)
 
-    def send_packet(self, cmd, data):
+    def send_packet(self, cmd=0x00, data=None):
         """Sends a packet to our mooltipass.
 
         Keyword arguments:
@@ -105,18 +106,15 @@ class Mooltipass(object):
         if data is not None:
             data_len = len(data)
 
-
         # Data sent over to the generic HID should be in 64 byte packets and in
         # the following array structure:
         #   buffer[0]  = length of data
         #   buffer[1]  = command identifier for this packet
         #   buffer[2:] = packet data
         arraytosend = array('B')
-        arraytosend.append(data_len)
-        arraytosend.append(cmd)
-
-        ##### Original code only appended command if it wasn't 0???
-        ##### What is CMD 0 used for then, straight data transfer?
+        if cmd > 0x00:
+            arraytosend.append(data_len)
+            arraytosend.append(cmd)
 
         if data is not None:
             arraytosend.extend(data)
@@ -408,8 +406,8 @@ class Mooltipass(object):
 
     def set_data_context(self, context):
         """Set the data context. (0xBE)"""
-        logging.info('Not yet implemented')
-        pass
+        self.send_packet(CMD_SET_DATA_SERVICE, array('B', context + '\x00'))
+        return self._tf_return(self.recv_packet())
 
     def add_data_context(self, context):
         """Add a data context. (0xBF)
@@ -419,16 +417,46 @@ class Mooltipass(object):
 
         Returns true/false on success/failure.
         """
-        logging.info('Not yet implemented')
-        pass
+        self.send_packet(CMD_ADD_DATA_SERVICE, array('B', context + '\x00'))
+        return self._tf_return(self.recv_packet())
 
     def write_data_context(self, data):
         """Write to data context in blocks of 32 bytes. (0xC0)
 
-        ???
+        Data is sent to the mooltipass in 32 byte blocks. The the first
+        byte of data sent with this command is an End of Data (EOD)
+        marker. A non-zero value markes the data as the last block in
+        sequence.
+
+        After this EOD marker is 32 bytes of data making the total
+        length of our transmission 33 bytes in size.
+
+        Arguments:
+            data -- iterable data to save in context
+
+        Returns true/false on success/error.
         """
-        logging.info('Not yet implemented')
-        pass
+
+        BLOCK_SIZE = 32
+
+        # Reading data back from the mooltipass also provides 32 byte
+        # blocks. The last byte of our data falls somewhere within the
+        # last 32 byte block. Add the length of expected data to the
+        # the start of what we save to the mooltipass to fix this.
+        lod = struct.pack('>H', len(data))
+        ext_data = array('B', lod)
+        ext_data.extend(data)
+
+        for i in range(0,len(ext_data),BLOCK_SIZE):
+            eod = (lambda byte: 0 if (len(ext_data) - byte > BLOCK_SIZE) else 1)(i)
+            packet = array('B')
+            packet.append(eod)
+            packet.extend(ext_data[i:i+BLOCK_SIZE])
+            self.send_packet(CMD_WRITE_32B_IN_DN, packet)
+            if eod == 0 and not self._tf_return(self.recv_packet()):
+                raise RuntimeError('Unexpected return')
+
+        return True
 
     def read_data_context(self):
         """Read data from context in blocks of 32 bytes. (0xC1)
@@ -437,8 +465,22 @@ class Mooltipass(object):
 
         Returns data or None on error.
         """
-        logging.info('Not yet implemented')
-        pass
+        data = array('B')
+
+        while True:
+            self.send_packet(CMD_READ_32B_IN_DN, None)
+            recv = self.recv_packet()
+            print('Received ' + str(len(recv)) + ' of data -- raw dump:')
+            #print(recv[self._DATA_INDEX:])
+            if recv[0] == 0x01:
+                break
+            data += recv[self._DATA_INDEX:]
+            #print(data)
+            #print(recv)
+
+        print(data)
+            # TODO: Not receiving full data write if it exceeds 32 bytes.
+
 
     # TODO: Lots of commands...
 

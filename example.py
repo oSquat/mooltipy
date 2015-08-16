@@ -58,6 +58,30 @@ if __name__ == '__main__':
 #    print(mooltipass.set_login('bob'))
 #    print(mooltipass.set_password('f2jf88288flskjf\x0D'))
 
+    context = 'xdat36'
+    while True:
+        if mooltipass.set_data_context(context):
+            print('set context')
+            break
+        print('adding context: ' + context)
+        if not mooltipass.add_data_context(context):
+            print('user decliend to add context.')
+            sys.exit(0)
+
+    from array import array
+    #x = array('B', x[::-1])
+    x = array('B')
+    for i in range(1,512):
+        x.append((512-i)%255)
+        #x.append(i)
+
+    #print(x)
+    print('sending data -- length is: ' + str(len(x)))
+    #mooltipass.write_data_context(x)
+    #time.sleep(2)
+    print('reading...')
+    mooltipass.read_data_context()
+
     print('fin')
 
 
