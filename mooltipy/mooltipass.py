@@ -1,4 +1,4 @@
-"""Mooltipy - a python library for the Mooltipass
+"""Contains the Mooltipass USB command side of our mooltipy project.
 
 Mostly ripped out of mooltipas_coms.py from the mooltipass project (relative
 path /tools/python_comms/mooltipass_coms.py). This is my learning guide with
@@ -127,14 +127,11 @@ class _Mooltipass(object):
                     (default 5000 is sane for most requests?).
         """
         recv = None
-        # The mooltipass should reply with 0xB9 if the user is currently
-        # entering hs PIN. I don't see this behavior, but we do get plenty
-        # of responses with 0xB9 so... ok. Look into further sometime maybe.
         while True:
             recv = self._epin.read(self._epin.wMaxPacketSize, timeout=timeout)
-            if recv is not None and recv[self._DATA_INDEX] != 0xB9:
+            if recv is not None or recv[0] == 0xB9:
+                # Unit sends 0xB9 when user is entering their PIN.
                 break
-            print(recv)
             time.sleep(.5)
         return recv
 
@@ -448,6 +445,11 @@ class _Mooltipass(object):
             packet = array('B')
             packet.append(eod)
             packet.extend(data[i:i+BLOCK_SIZE])
+            # Remove maybe? Added debugging problem after importing data
+            if len(packet) != 33:
+                packet.extend([0]*(33-len(packet)))
+                print(packet)
+                print('is eod: {0}'.format(eod))
             self.send_packet(CMD_WRITE_32B_IN_DN, packet)
             logging.debug('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
             if eod == 0 and not self._tf_return(self.recv_packet()):
@@ -466,10 +468,12 @@ class _Mooltipass(object):
 
         while True:
             self.send_packet(CMD_READ_32B_IN_DN, None)
-            recv = self.recv_packet(60000)
+            recv = self.recv_packet(5000)
+            if len(recv) < 4:
+                print(recv)
             if recv[0] == 0x01:
                 break
-            data += recv[self._DATA_INDEX:32+self._DATA_INDEX]
+            data.extend(recv[self._DATA_INDEX:32+self._DATA_INDEX])
             logging.debug('Received {0} bytes...'.format(str(len(data))))
 
         return data
