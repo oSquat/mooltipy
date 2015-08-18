@@ -129,9 +129,13 @@ class _Mooltipass(object):
         recv = None
         while True:
             recv = self._epin.read(self._epin.wMaxPacketSize, timeout=timeout)
+            #logging.debug('\n\t' + str(recv))
             if recv is not None or recv[0] == 0xB9:
                 # Unit sends 0xB9 when user is entering their PIN.
                 break
+            if recv[0] == 0xC4:
+                print('HEY I GOT A 0xC4!')
+            print('HEY I GOT 0xb9')
             time.sleep(.5)
         return recv
 
@@ -150,6 +154,12 @@ class _Mooltipass(object):
 
         Returns None. It is client's responsibility to listen for
         responses matching the data sent with their ping request.
+
+        IMPORTANT NOTE:
+            Ping is not just a mechanism for testing connectivity to
+            the mooltipass, it is a crucial element in initializing
+            communication with. Failure to ping after connecting to
+            the mooltipass can result in unpredictable responses.
         """
         self.send_packet(CMD_PING, data)
         return None
@@ -417,6 +427,7 @@ class _Mooltipass(object):
 
         Return true/false on success/failure.
         """
+        print('sending ' + context)
         self.send_packet(CMD_ADD_DATA_SERVICE, array('B', context + b'\x00'))
         return self._tf_return(self.recv_packet())
 
@@ -446,14 +457,25 @@ class _Mooltipass(object):
             packet.append(eod)
             packet.extend(data[i:i+BLOCK_SIZE])
             # Remove maybe? Added debugging problem after importing data
-            if len(packet) != 33:
-                packet.extend([0]*(33-len(packet)))
-                print(packet)
-                print('is eod: {0}'.format(eod))
+            #if len(packet) != 33:
+                #packet.extend([0]*(33-len(packet)))
+                #print(packet)
+                #print('is eod: {0}'.format(eod))
             self.send_packet(CMD_WRITE_32B_IN_DN, packet)
             logging.debug('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
             if eod == 0 and not self._tf_return(self.recv_packet()):
                 raise RuntimeError('Unexpected return')
+        #        counter = 3
+        #        while True:
+        #            self.send_packet(CMD_WRITE_32B_IN_DN, packet)
+        #            if self._tf_return(self.recv_packet()):
+        #                break
+        #            else:
+        #                counter -= 1
+        #                if counter == 0:
+        #                    raise RuntimeError('Unexpected return')
+        #                print('sleeping 3...')
+        #                timer.sleep(3)
 
         return True
 

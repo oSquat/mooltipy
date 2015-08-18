@@ -63,30 +63,29 @@ if __name__ == '__main__':
 
     test_data = True
     if test_data:
-        context = b'xdat45'
+        context = b'xdat49'
         while True:
             if mooltipass.set_data_context(context):
-                print('set context')
+                print('Set context' + context)
                 break
-            print(b'adding context: ' + context)
             if not mooltipass.add_data_context(context):
                 print('user decliend to add context.')
                 sys.exit(0)
+            print('Added context: ' + context)
 
         from array import array
         #x = array('B', x[::-1])
         x = array('B')
-        for i in range(0,512):
-            x.append((512-i)%255)
+        for i in range(0,30000):
+            x.append((30000-i)%255)
             #x.append(i)
 
-        #print(x)
-        print('sending data -- length is: ' + str(len(x)))
-        #mooltipass.write_data_context(x)
+        #print('sending data -- length is: ' + str(len(x)))
+        mooltipass.write_data_context(x)
         time.sleep(2)
 
         print('reading...')
-        mooltipass.read_data_context()
+        #mooltipass.read_data_context()
 
     print('fin')
 

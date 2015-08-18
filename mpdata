@@ -45,6 +45,16 @@ if __name__ == '__main__':
 
     mooltipass = MooltipassClient()
 
+    # Ping the mooltipass, an integral part of the initialization process.
+    if mooltipass is None:
+        print('Mooltipass is None, this is a problem.')
+        sys.exit(0)
+
+    if not mooltipass.ping():
+        logging.error('Mooltipass did not reply to a ping request!')
+        print('failure')
+        sys.exit(0)
+
     # Ensure Mooltipass status
     quiet_bool = False
     while True:
@@ -60,7 +70,7 @@ if __name__ == '__main__':
     # Handle context
     while True:
         if mooltipass.set_data_context(context):
-            logging.debug('Set context.')
+            logging.debug('Set context ' + context)
             break
         else:
             if action == 'export':
@@ -72,20 +82,22 @@ if __name__ == '__main__':
             logging.debug('Context added')
             time.sleep(1)
 
-    if action == 'export':
+    if action == 'import':
+        with open(filepath, 'rb') as fin:
+            data = array('B',fin.read())
+        if len(data) > 15000:
+            print('That file appears to be greater than ~15000 bytes which is too large.')
+            sys.exit(0)
+        mooltipass.write_data_context(data)
+    else:
         data = mooltipass.read_data_context()
         with open(filepath, 'wb') as fout:
             data.tofile(fout)
-    else:
-        with open(filepath, 'rb') as fin:
-            data = array('B',fin.read())
-        mooltipass.write_data_context(data)
 
     # TODO: Pretty important
-    #   * After importing data, data won't export without cold booting the unit
-    #   * Importing up to 174,000KB works well! Exporting stops ~26KB?
-    #   * Alias extract as acceptable alternative to export because annoying
+    #   * Alias argument "extract" as alternative to "export" because annoying
     #   * Replace optparse with argparse; python3 compatibility
+    #   * I'm encountering errors sending ~> 16KB to a data service on the unit
     # TODO: Eventually
     #   * Some indication of progress -- transfer can be slow.
     #   * List data contexts
