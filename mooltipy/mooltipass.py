@@ -24,9 +24,11 @@ from .constants import *
 
 
 class _Mooltipass(object):
-    """Send USB commands and receive responses. This class is meant to
-    represent native access to the Mooltipass and should be interited
-    by MooltipassClient()."""
+    """Mooltipass -- Outlines access to Mooltipass's USB commands. This
+                class is designed to be inherited (particularly by
+                MooltipassClient()) and represents the server half of
+                of the Client-Server / App-Mooltiplass relationship.
+    """
 
     _CMD_INDEX = 0x01
     _DATA_INDEX = 0x02
