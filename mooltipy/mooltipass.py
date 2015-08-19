@@ -136,8 +136,17 @@ class _Mooltipass(object):
                 # Unit sends 0xB9 when user is entering their PIN.
                 break
             if recv[0] == 0xC4:
+                # The mooltipass may request the client resend its
+                # previous packet. I have not yet encountered this, but
+                # I guess it should be passed back to the calling
+                # function... alternatively we should mingle the send
+                # and receive methods or maybe create a FIFO pipe and
+                # "peek" at the contents in send before moving back to
+                # the calling function which would then recv_packet.
+                # One more thought, maybe just find out under what
+                # circumstances a 0xC4 may be received (e.g. data xfer
+                # only).
                 print('HEY I GOT A 0xC4!')
-            print('HEY I GOT 0xb9')
             time.sleep(.5)
         return recv
 
@@ -503,6 +512,143 @@ class _Mooltipass(object):
         return data
 
     # TODO: Add lots of commands...
+
+    def _get_current_card_cpz(self):
+        """Return CPZ of currently inserted card.
+
+        Card Protected Zone (CPZ)??? Returns None or data.
+        """
+        logging.info('Not yet implemented')
+        # CPZ should be returned... presumably in 32 byte chunks in a
+        # fashion simliar to reading data until 0x00 is encountered.
+        # Mooltipass returns just 0x00 on error.
+        pass
+
+    def cancel_user_request(self):
+        """Cancel user input request. (0xC3)
+
+        The app can send a command to cancel any current user request.
+        There's no receiving involved in this command, so None is
+        always returned.
+        """
+        self.send_packet(CMD_CANCEL_USER_REQUEST, None)
+        return None
+
+    # 0xC4 is reserved for response from Mooltipass.
+
+    def _read_node(self, node_number):
+        """Read a node in flash. (0xC5)
+
+        Arguments:
+            node_number - two bytes indicating node number
+
+        Return the node or 0x00 on error.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def _write_node(self, node_number, packet_number):
+        """Write a node in flash. (0xC6)
+
+        Arguments:
+            node_number -- two bytes indicating the node number
+            pckt_number -- ??? byte(s) indicating the node number
+
+        Return 1 or 0 indicating success or failure.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def _get_favorite(self, slot_id):
+        """Get favorite for current user by slot ID. (0xC7)
+
+        Arguments:
+            slot_id -- Slot ID of favorite to retieve.
+
+        Return None on error or parent_addr, child_addr tuple (each
+        address is 2 bytes).
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def _set_favorite(self, slot_id, addr_tuple):
+        """Set a favorite. (0xC8)
+
+        Arguments:
+            slot_id - Slot ID of favorite to save / overwrite
+            addr_tuple - parent_addr, child_addr tuple (each 2 bytes)
+
+        Return 1 or 0 indicating success or failure.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def _get_starting_parent_address(self):
+        """Get the address of starting parent? (0xC9)
+
+        Return slot address or None on failure.
+        """
+        logging.info('Not yet implemented.')
+        pass
+
+    def _set_starting_parent(self, parent_addr)
+        """Set starting parent address. (0xCA)
+
+        Arguments:
+            parent_addr - 2 bytes starting parent address (LSB)
+
+        Return 1 or 0 indicating success or failure.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+
+    def _get_ctr_value(self):
+        """Get the current user CTR value. (0xCB)
+
+        Returns CTR value or None on error.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def _set_ctr_value(self, ctr_value):
+        """Set new CTR value. (0xCC)
+
+        Arguments:
+            ctr_value -- 3 byte CTR value
+
+        Returns 1 or 0 indicating success or failure.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def add_cpz_ctr_value(self, cpz, ctr):
+        pass
+    def get_cpz_ctr_value(self)
+        pass
+    def cpz_ctr_packet_export(self)
+        pass
+
+    def get_free_slot_addresses(self, start_addr):
+        """Scan for free slot addresses. (0xD0)
+
+        Arguments:
+            start_address - Address to start scanning from (if in doubt
+                            0x00, 0x00).
+
+        Return 31 slot addresses max otherwise (see payload length
+        field)??? or None on error.
+        """
+        logging.info('Not yet implemented')
+        pass
+
+    def get_starting_data_parent_address(self):
+        """Get the address of the data starting parent.
+
+        Return slot address or None on failure.
+        """
+        logging.info('Not yet implemented')
+        pass
 
     def end_memory_management(self):
         """End memory management mode. (0xD3)
