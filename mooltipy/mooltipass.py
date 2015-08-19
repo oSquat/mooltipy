@@ -591,7 +591,7 @@ class _Mooltipass(object):
         logging.info('Not yet implemented.')
         pass
 
-    def _set_starting_parent(self, parent_addr)
+    def _set_starting_parent(self, parent_addr):
         """Set starting parent address. (0xCA)
 
         Arguments:
@@ -624,9 +624,9 @@ class _Mooltipass(object):
 
     def add_cpz_ctr_value(self, cpz, ctr):
         pass
-    def get_cpz_ctr_value(self)
+    def get_cpz_ctr_value(self):
         pass
-    def cpz_ctr_packet_export(self)
+    def cpz_ctr_packet_export(self):
         pass
 
     def get_free_slot_addresses(self, start_addr):
