@@ -8,6 +8,8 @@ If you are having difficulty with core stuff (e.g. establishing a connection
 to the mooltipass) it may be wise to compare with that file as I have trimmed
 things down for simplicity.
 """
+# TODO:
+#   * Remove True / False return in lieu of 1 or 0 which compatible.
 
 from array import array
 
@@ -536,7 +538,23 @@ class _Mooltipass(object):
 
     # 0xC4 is reserved for response from Mooltipass.
 
-    def _read_node(self, node_number):
+    class Node(object):
+        """Represent node."""
+        def __init__(
+                self,
+                node_addr,
+                prev_parent_addr,
+                next_parent_addr,
+                next_child_addr,
+                service_name):
+
+            self.node_addr = node_addr
+            self.prev_parent_addr = prev_parent_addr
+            self.next_parent_addr = next_parent_addr
+            self.next_child_addr = next_child_addr
+            self.service_name = service_name
+
+    def read_node(self, node_number):
         """Read a node in flash. (0xC5)
 
         Arguments:
@@ -544,8 +562,32 @@ class _Mooltipass(object):
 
         Return the node or 0x00 on error.
         """
-        logging.info('Not yet implemented')
-        pass
+        node_addr = struct.pack('H', node_number)
+        data = array('B', node_addr)
+        self.send_packet(CMD_READ_FLASH_NODE, data)
+
+        recv = self.recv_packet()
+        flags, prev_parent_addr, next_parent_addr, next_child_addr = \
+            struct.unpack('HHHH', recv[self._DATA_INDEX:self._DATA_INDEX+8])
+
+        # TODO: Make this not ugly
+        recv = recv[self._DATA_INDEX+8:self._DATA_INDEX+66]
+        recv_unpacked = struct.unpack(str(len(recv))+'s', recv)[0]
+        service_name = str()
+        for c in recv_unpacked:
+            if ord(c) == 0:
+                break
+            else:
+                service_name += c
+
+        node = self.Node(
+            flags,
+            prev_parent_addr,
+            next_parent_addr,
+            next_child_addr,
+            service_name)
+
+        return node
 
     def _write_node(self, node_number, packet_number):
         """Write a node in flash. (0xC6)
@@ -583,13 +625,16 @@ class _Mooltipass(object):
         logging.info('Not yet implemented')
         pass
 
-    def _get_starting_parent_address(self):
+    def get_starting_parent_address(self):
         """Get the address of starting parent? (0xC9)
 
         Return slot address or None on failure.
         """
-        logging.info('Not yet implemented.')
-        pass
+        self.send_packet(CMD_GET_STARTING_PARENT, None)
+        recv = self.recv_packet()
+        parent_addr = \
+            struct.unpack('h', recv[self._DATA_INDEX:self._DATA_INDEX+2])[0]
+        return (lambda ret: None if 0 else ret)(parent_addr)
 
     def _set_starting_parent(self, parent_addr):
         """Set starting parent address. (0xCA)

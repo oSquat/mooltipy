@@ -47,12 +47,6 @@ if __name__ == '__main__':
         else:
             print('unknown resp: {0}'.format(str(recv[DATA_INDEX])))
 
-
-    #print(mooltipass.start_memory_management())
-
-    #print(mooltipass.end_memory_management())
-
-
     test_context = False
     if test_context:
         while not mooltipass.set_context(b'another_site2'):
@@ -61,7 +55,7 @@ if __name__ == '__main__':
         print(mooltipass.set_login(b'bob'))
         print(mooltipass.set_password(b'f2jf88288flskjf\x0D'))
 
-    test_data = True
+    test_data = False
     if test_data:
         context = b'xdat49'
         while True:
@@ -86,6 +80,26 @@ if __name__ == '__main__':
 
         print('reading...')
         #mooltipass.read_data_context()
+
+
+    print('Starting memory management...')
+    print(mooltipass.start_memory_management())
+
+    print('Get starting parent address...')
+    node_number = mooltipass.get_starting_parent_address()
+
+    print('Reading node at address: {0:#x}'.format(node_number))
+    node = mooltipass.read_node(node_number)
+    print("""
+    Address:            {0:#x}
+    Next Parent:        {1:#x}
+    Previous Parent:    {2:#x}
+    Next Child          {3:#x}
+    Service Name:       {4}
+""".format(node.node_addr, node.prev_parent_addr, node.next_parent_addr, node.next_child_addr, node.service_name))
+
+    print('Ending memory management...')
+    print(mooltipass.end_memory_management())
 
     print('fin')
 
