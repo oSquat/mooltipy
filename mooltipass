@@ -32,12 +32,25 @@ if __name__ == '__main__':
     (options, args) = main_options()
 
     mooltipass = MooltipassClient()
+
+    # Ping the mooltipass, an integral part of the initialization process.
+    if not mooltipass.ping():
+        logging.error('Mooltipass did not reply to a ping request!')
+        print('failure')
+        sys.exit(0)
+
+    # Ensure Mooltipass status
     quiet_bool = False
-    while mooltipass.get_status() != 5:
+    while True:
+        status = mooltipass.get_status()
+        if status == 5:
+            break
+        logging.debug('Status != 5... it is: {0}'.format(status))
         if not quiet_bool:
             print('Insert a card and unlock the Mooltipass...')
         quiet_bool = True
         time.sleep(2)
+    quiet_bool = False
 
     while not mooltipass.set_context(args[0]):
         mooltipass.add_context(args[0])

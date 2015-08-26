@@ -33,6 +33,12 @@ def main_options():
 
 if __name__ == '__main__':
 
+    print("""
+I would advise against using this on a mooltipass that you are using live. If
+you have a development mooltipass you want to test with, view the source and
+remove this message.\n""")
+    sys.exit(0)
+
     (options, args) = main_options()
 
     logging.basicConfig(
@@ -45,11 +51,11 @@ if __name__ == '__main__':
 
     mooltipass = MooltipassClient()
 
-    # Ping the mooltipass, an integral part of the initialization process.
     if mooltipass is None:
         print('Mooltipass is None, this is a problem.')
         sys.exit(0)
 
+    # Ping the mooltipass, an integral part of the initialization process.
     if not mooltipass.ping():
         logging.error('Mooltipass did not reply to a ping request!')
         print('failure')
@@ -85,9 +91,9 @@ if __name__ == '__main__':
     if action == 'import':
         with open(filepath, 'rb') as fin:
             data = array('B',fin.read())
-        if len(data) > 15000:
-            print('That file appears to be greater than ~15000 bytes which is too large.')
-            sys.exit(0)
+        #if len(data) > 15000:
+        #    print('That file appears to be greater than ~15000 bytes which is too large.')
+        #    sys.exit(0)
         mooltipass.write_data_context(data)
     else:
         data = mooltipass.read_data_context()
