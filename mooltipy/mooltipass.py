@@ -469,26 +469,10 @@ class _Mooltipass(object):
             packet = array('B')
             packet.append(eod)
             packet.extend(data[i:i+BLOCK_SIZE])
-            # Remove maybe? Added debugging problem after importing data
-            #if len(packet) != 33:
-                #packet.extend([0]*(33-len(packet)))
-                #print(packet)
-                #print('is eod: {0}'.format(eod))
             self.send_packet(CMD_WRITE_32B_IN_DN, packet)
             logging.debug('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
             if eod == 0 and not self._tf_return(self.recv_packet()):
                 raise RuntimeError('Unexpected return')
-        #        counter = 3
-        #        while True:
-        #            self.send_packet(CMD_WRITE_32B_IN_DN, packet)
-        #            if self._tf_return(self.recv_packet()):
-        #                break
-        #            else:
-        #                counter -= 1
-        #                if counter == 0:
-        #                    raise RuntimeError('Unexpected return')
-        #                print('sleeping 3...')
-        #                timer.sleep(3)
 
         return True
 

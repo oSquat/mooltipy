@@ -33,12 +33,6 @@ def main_options():
 
 if __name__ == '__main__':
 
-    print("""
-I would advise against using this on a mooltipass that you are using live. If
-you have a development mooltipass you want to test with, view the source and
-remove this message.\n""")
-    sys.exit(0)
-
     (options, args) = main_options()
 
     logging.basicConfig(
@@ -91,9 +85,6 @@ remove this message.\n""")
     if action == 'import':
         with open(filepath, 'rb') as fin:
             data = array('B',fin.read())
-        #if len(data) > 15000:
-        #    print('That file appears to be greater than ~15000 bytes which is too large.')
-        #    sys.exit(0)
         mooltipass.write_data_context(data)
     else:
         data = mooltipass.read_data_context()
@@ -102,9 +93,12 @@ remove this message.\n""")
 
     # TODO: Pretty important
     #   * Alias argument "extract" as alternative to "export" because annoying
-    #   * Replace optparse with argparse; python3 compatibility
-    #   * I'm encountering errors sending ~> 16KB to a data service on the unit
+    #       also "upload" & "download"
+    #   * Replace optparse with argparse
+    #   * Python3 compatibility
+    #   * Setup signal handling to gracefully close data connection on ctrl-c
     # TODO: Eventually
     #   * Some indication of progress -- transfer can be slow.
     #   * List data contexts
     #   * Delete data contexts
+    #   * Warn on large files liable to induce sleep

@@ -30,15 +30,17 @@ class MooltipassClient(_Mooltipass):
             data = array('B')
             data.append(random.randint(0,255))
             data.append(random.randint(0,255))
-            #data.append(random.randint(0,255))
-            #data.append(random.randint(0,255))
+            data.append(random.randint(0,255))
+            data.append(random.randint(0,255))
 
             super(MooltipassClient, self).ping(data)
 
             recv = None
             while recv is None or \
                     recv[self._DATA_INDEX] != data[0] or \
-                    recv[self._DATA_INDEX+1] != data[1]:
+                    recv[self._DATA_INDEX+1] != data[1] or \
+                    recv[self._DATA_INDEX+2] != data[2] or \
+                    recv[self._DATA_INDEX+3] != data[3]:
 
                 recv = super(MooltipassClient, self).recv_packet()
 
