@@ -1,3 +1,6 @@
 env*
 *.swp
 *.pyc
+mooltipy.egg-info/
+dist/
+MANIFEST

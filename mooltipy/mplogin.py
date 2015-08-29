@@ -27,7 +27,7 @@ def main_options():
 
     return (options, args)
 
-if __name__ == '__main__':
+def main():
 
     (options, args) = main_options()
 
@@ -57,6 +57,10 @@ if __name__ == '__main__':
 
     mooltipass.set_login(options.login)
     mooltipass.set_password(options.password)
+
+if __name__ == '__main__':
+
+    main()
 
     #TODO: theres a lot left to be desired here
 

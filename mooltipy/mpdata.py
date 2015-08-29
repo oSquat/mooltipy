@@ -9,6 +9,7 @@ import sys
 
 from mooltipy import MooltipassClient
 
+
 def main_options():
     """Handles command-line interface, arguments & options."""
 
@@ -19,19 +20,17 @@ def main_options():
 
     (options, args) = parser.parse_args()
 
-    if not args[0].lower() in ['import', 'export']:
-        parser.error('Action must be import or export; see --help.')
-        sys.exit(0)
-
     if not len(args) == 3:
         parser.error('Incorrect number of arguments; see --help.')
         sys.exit(0)
 
-    print(args)
+    if not args[0].lower() in ['import', 'export']:
+        parser.error('Action must be import or export; see --help.')
+        sys.exit(0)
 
     return (options, args)
 
-if __name__ == '__main__':
+def main():
 
     logging.basicConfig(
             format='%(levelname)s\t %(funcName)s():\t %(message)s',
@@ -84,6 +83,10 @@ if __name__ == '__main__':
         data = mooltipass.read_data_context()
         with open(filepath, 'wb') as fout:
             data.tofile(fout)
+
+if __name__ == '__main__':
+
+    main()
 
     # TODO: Pretty important
     #   * Alias argument "extract" as alternative to "export" because annoying
