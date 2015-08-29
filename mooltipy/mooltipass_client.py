@@ -6,16 +6,22 @@ import logging
 
 from .mooltipass import _Mooltipass
 
+
 class MooltipassClient(_Mooltipass):
-    """Inherits _Mooltipass() and extends raw firmware calls.
+    """Inherits _Mooltipass() and extends raw USB/firmware calls.
 
     Certain USB commands sent to the Mooltipass require some additional
     client-side code to be useful (e.g. ping; read/write data context)
     or there may not be a USB command at all (e.g. delete contexts).
 
-    MooltipassClient is meant to be used by an application, extend the
-    _Mooltipass class.
+    MooltipassClient is meant to be used by an application, extending
+    the _Mooltipass class.
     """
+
+    def __init__(self):
+        super(MooltipassClient, self).__init__()
+        if not self.ping():
+            raise RuntimeError('Mooltipass did not respond to ping.')
 
     @property
     def status(self):
@@ -81,16 +87,18 @@ class MooltipassClient(_Mooltipass):
     def write_data_context(self, data):
         """Write to mooltipass data context.
 
+        Adds a layer to data which is necessary to enable retrieval.
+
         Arguments:
             data -- iterable data to save in context
 
         Return true/false on success/error.
         """
 
-        # Reading data back from the mooltipass also provides 32 byte
-        # blocks. The last byte of our data falls somewhere within the
-        # last 32 byte block. Prefix the length of our data to the start
-        # of the data we were given handle this problem.
+        # Prefix a length indicator to the start of our data. Reading
+        # back from the mooltipass provides 32 byte blocks and the unit
+        # has no concept of where in the final block our last byte is
+        # located. Use this lenth indicator to find the end byte.
         lod = struct.pack('>L', len(data))
         ext_data = array('B', lod)
         ext_data.extend(data)
@@ -103,6 +111,6 @@ class MooltipassClient(_Mooltipass):
         # See write_data_context for explanation of lod
         lod = struct.unpack('>L', data[:4])[0]
         logging.debug('Expecting: ' + str(lod) + ' bytes...')
+        # TODO: Should I raise an error or otherwise handle when
+        #   length of data received is shorter than expected?
         return data[4:lod+4]
-
-    # TODO: Lots of commands...

@@ -33,11 +33,11 @@ def main_options():
 
 if __name__ == '__main__':
 
-    (options, args) = main_options()
-
     logging.basicConfig(
             format='%(levelname)s\t %(funcName)s():\t %(message)s',
             level=logging.DEBUG)
+
+    (options, args) = main_options()
 
     action = args[0]
     context = args[1]
@@ -47,12 +47,6 @@ if __name__ == '__main__':
 
     if mooltipass is None:
         print('Mooltipass is None, this is a problem.')
-        sys.exit(0)
-
-    # Ping the mooltipass, an integral part of the initialization process.
-    if not mooltipass.ping():
-        logging.error('Mooltipass did not reply to a ping request!')
-        print('failure')
         sys.exit(0)
 
     # Ensure Mooltipass status
@@ -65,7 +59,7 @@ if __name__ == '__main__':
         if not quiet_bool:
             print('Insert a card and unlock the Mooltipass...')
         quiet_bool = True
-        time.sleep(2)
+        time.sleep(1)
 
     # Handle context
     while True:
@@ -96,7 +90,6 @@ if __name__ == '__main__':
     #       also "upload" & "download"
     #   * Replace optparse with argparse
     #   * Python3 compatibility
-    #   * Setup signal handling to gracefully close data connection on ctrl-c
     # TODO: Eventually
     #   * Some indication of progress -- transfer can be slow.
     #   * List data contexts

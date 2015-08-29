@@ -464,17 +464,23 @@ class _Mooltipass(object):
 
         BLOCK_SIZE = 32
 
-        for i in range(0,len(data),BLOCK_SIZE):
-            eod = (lambda byte: 0 if (len(data) - byte > BLOCK_SIZE) else 1)(i)
-            packet = array('B')
-            packet.append(eod)
-            packet.extend(data[i:i+BLOCK_SIZE])
-            self.send_packet(CMD_WRITE_32B_IN_DN, packet)
-            logging.debug('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
-            if eod == 0 and not self._tf_return(self.recv_packet()):
-                raise RuntimeError('Unexpected return')
+        try:
+            for i in range(0,len(data),BLOCK_SIZE):
+                eod = (lambda byte: 0 if (len(data) - byte > BLOCK_SIZE) else 1)(i)
+                packet = array('B')
+                packet.append(eod)
+                packet.extend(data[i:i+BLOCK_SIZE])
+                self.send_packet(CMD_WRITE_32B_IN_DN, packet)
+                logging.debug('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
+                if eod == 0 and not self._tf_return(self.recv_packet()):
+                    raise RuntimeError('Unexpected return')
 
-        return True
+            return True
+
+        except (KeyboardInterrupt, SystemExit):
+            self.send_packet(CMD_WRITE_32B_IN_DN, array('B').append(0))
+            print('SENT TERMINATE')
+            raise
 
     def read_data_context(self):
         """Read data from context in blocks of 32 bytes. (0xC1)
