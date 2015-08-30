@@ -48,14 +48,16 @@ def main_options():
             'Avalilable utilities:\n' + \
             utility_list
 
-    # This is a wormhole to pass help flags onto the utility specified
-    # instead of leaving them for our wrapper's parse_args() to find.
-    utility_help = False
-    if len(sys.argv) > 2 and (set(['-h','--help', 'help']) & set(sys.argv)):
-        help_string = (set(['-h','--help', 'help']) & set(sys.argv)).pop()
-        utility_help = True
-        help_index = sys.argv.index(help_string)
-        sys.argv[help_index] = None
+    # All arguments after argv[1] are passed through to the utility and
+    # should not be left for mooltipy_wrapper's call to parse_args() 
+    passthrough_args = None
+    if len(sys.argv) > 2:
+        passthrough_args = sys.argv[2:]
+        sys.argv = sys.argv[0:2]
+        for x in sys.argv:
+            print(x)
+        # Add a dummy entry in argv for args option
+        sys.argv.append(None)
 
     parser = argparse.ArgumentParser(usage=usage)
     parser.add_argument('utility', help='Utility to use.')
@@ -68,9 +70,10 @@ def main_options():
         parser.print_help()
         sys.exit(1)
 
-    # Pass --help onto utility if help was asked of a utility.
-    if utility_help:
-        sys.argv[help_index] = '--help'
+    # Reattatch arguments intended for the utility.
+    if passthrough_args:
+        del sys.argv[2]
+        sys.argv += passthrough_args
 
     return args
 

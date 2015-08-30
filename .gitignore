@@ -3,5 +3,7 @@ env*
 *.pyc
 mooltipy.egg-info/
 dist/
+build/
 MANIFEST
 MYNOTES
+example.py
