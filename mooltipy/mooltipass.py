@@ -1,12 +1,20 @@
+# This file is part of Mooltipy.
+#
+# Mooltipy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Mooltipy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Mooltipy.  If not, see <http://www.gnu.org/licenses/>.
+
 """Contains the Mooltipass USB command side of our mooltipy project.
 
-Mostly ripped out of mooltipas_coms.py from the mooltipass project (relative
-path /tools/python_comms/mooltipass_coms.py). This is my learning guide with
-a goal of creating a non-browser mooltipas management utility.
-
-If you are having difficulty with core stuff (e.g. establishing a connection
-to the mooltipass) it may be wise to compare with that file as I have trimmed
-things down for simplicity.
 """
 # TODO:
 #   * Remove True / False return in lieu of 1 or 0 which compatible.
@@ -26,10 +34,11 @@ from .constants import *
 
 
 class _Mooltipass(object):
-    """Mooltipass -- Outlines access to Mooltipass's USB commands. This
-                class is designed to be inherited (particularly by
-                MooltipassClient()) and represents the server half of
-                of the Client-Server / App-Mooltiplass relationship.
+    """Mooltipass -- Outlines access to Mooltipass's USB commands.
+
+    This class is designed to be inherited (particularly by
+    MooltipassClient()) and represents the server half of of the Client-
+    Server / App-Mooltiplass relationship.
     """
 
     _CMD_INDEX = 0x01
@@ -46,6 +55,10 @@ class _Mooltipass(object):
 
         Raises RuntimeError on failure.
         """
+        # Mostly ripped out of mooltipas_coms.py from the mooltipass
+        # project originally written by Mathieu Stephan
+        # https://github.com/limpkin/mooltipass/tools/python_comms/mooltipass_coms.py
+
 
         USB_VID = 0x16D0
         USB_PID = 0x09A0
@@ -147,7 +160,7 @@ class _Mooltipass(object):
                 # the calling function which would then recv_packet.
                 # One more thought, maybe just find out under what
                 # circumstances a 0xC4 may be received (e.g. data xfer
-                # only).
+                # only). Just leaving some thoughts.
                 print('HEY I GOT A 0xC4!')
             time.sleep(.5)
         return recv
