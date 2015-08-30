@@ -15,22 +15,31 @@
 # You should have received a copy of the GNU General Public License
 # along with Mooltipy.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Importing & extracting files to and from the Mooltipass."""
+"""Import & export small files to and from the Mooltipass."""
 
 from array import array
 import logging
 from optparse import OptionParser
+import os
 import time
 import sys
 
-from mooltipy import MooltipassClient
+from mooltipy.mooltipass_client import MooltipassClient
 
 
 def main_options():
     """Handles command-line interface, arguments & options."""
 
-    usage = 'Usage: %prog {IMPORT|EXPORT} CONTEXT FILEPATH\n' + \
-            'Example: %prog import ssh_key ~/.ssh/id_rsa'
+    # Fix usage message if executed from wrapper
+    utility_called = ''
+    if os.path.split(sys.argv[0])[1] in ['./mooltipy.py', 'mooltipy']:
+        utility_called = sys.argv[1]
+        del sys.argv[1]
+
+    usage = 'Usage: %prog {utility} {{IMPORT|EXPORT}} CONTEXT FILEPATH\n'.format(
+            utility=utility_called)
+    usage +='Example: %prog {utility} import ssh_key ~/.ssh/id_rsa'.format(
+            utility=utility_called)
 
     parser = OptionParser(usage)
 
@@ -109,8 +118,11 @@ if __name__ == '__main__':
     #       also "upload" & "download"
     #   * Replace optparse with argparse
     #   * Python3 compatibility
+    #   * Unexpected return on import to existing context?
     # TODO: Eventually
     #   * Some indication of progress -- transfer can be slow.
     #   * List data contexts
     #   * Delete data contexts
     #   * Warn on large files liable to induce sleep
+    #   * On import, referencing file that doesn't exist causes failure
+    #   * On export, warn before clobbering file?

@@ -15,20 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with Mooltipy.  If not, see <http://www.gnu.org/licenses/>.
 
-"""A command line utility for managing login contexts in the
-mooltipass.
-"""
+"""Manage contexts containing usernames & passwords."""
 
 from optparse import OptionParser
+import os
 import time
+import sys
 
-from mooltipy import MooltipassClient
+from mooltipy.mooltipass_client import MooltipassClient
 
 def main_options():
     """Handles command-line interface, arguments & options. """
 
-    usage = 'Usage: %prog {context} [OPTIONS]\n' + \
-            'Example: %prog Lycos.com --login=jsmith --password="not_random"'
+    # Fix usage message if executed from wrapper
+    utility_called = ''
+    print('utility called: ' + os.path.split(sys.argv[0])[1])
+    if os.path.split(sys.argv[0])[1] in ['./mooltipy.py', 'mooltipy']:
+        utility_called = sys.argv[1]
+        del sys.argv[1]
+
+    usage = 'Usage: %prog {utility} [OPTIONS]\n'.format(utility=utility_called)
+    usage +='Example: %prog {utility} '.format(utility=utility_called)
+    usage += 'Lycos.com --login=jsmith --password="not_random"'
 
     parser = OptionParser(usage)
     parser.add_option('--login', dest='login', metavar='USER',
@@ -37,9 +45,6 @@ def main_options():
             help='password for login')
 
     (options, args) = parser.parse_args()
-
-    if not len(args) == 1:
-        parser.error('Incorrect number of arguments; see --help.')
 
     return (options, args)
 

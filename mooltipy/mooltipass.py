@@ -462,7 +462,7 @@ class _Mooltipass(object):
 
         Data is sent to the mooltipass in 32 byte blocks. The the first
         byte of data sent with this command is an End of Data (EOD)
-        marker. A non-zero value markes the data as the last block in
+        marker. A non-zero value marks the data as the last block in
         sequence.
 
         After this EOD marker is 32 bytes of data making the total

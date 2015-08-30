@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'mooltipy',
-    version = '0.1.0',
+    version = '0.2.0',
     description = 'Mooltipass command line utilities and development library.',
     url = 'https://github.com/osquat/mooltipy',
     author = 'Vic Simeone',
@@ -24,8 +24,9 @@ setup(
     install_requires = ['pycrypto', 'pyusb==1.0.0b2'],
     entry_points = {
         'console_scripts': [
-            'mpdata = mooltipy.mpdata:main',
-            'mplogin = mooltipy.mplogin:main',
+            'mooltipy = mooltipy.utilities.mooltipy_wrapper:main',
+            'mpdata = mooltipy.utilities.mpdata:main',
+            'mplogin = mooltipy.utilities.mplogin:main',
         ],
     }
 )
