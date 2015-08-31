@@ -11,12 +11,12 @@ user@box:~/$ pip install mooltipy
 ```
 
 ### Add contexts
-You can use mooltipass to add contexts. This is a terrible idea in practice
+Manage login contexts with Mooltipy. The example below is a terrible idea
 since you might log your password to .bash_history... but this should be
 fixed soon with self-generating, random passwords.
 
 ```
-$ sudo mplogin tripod.com --login=user_name --password="P@ssw0rd"
+$ mooltipy login tripod.com --login=user_name --password="P@ssw0rd"
 ```
 
 ### Manage Data Contexts
@@ -24,12 +24,29 @@ The Mooltipass can be used to securely store small data files! Think ssh or gpg
 keys and cryptocurrency wallets.
 
 ```
-$ sudo mpdata import ssh_key ~/.ssh/id_rsa
-$ sudo mpdata export ssh_key ./restored_key
+$ mooltipy data import ssh_key ~/.ssh/id_rsa
+$ mooltipy data export ssh_key ./restored_key
+```
+
+**Warning**: Do not disconnect your mooltipass during data transfer! We do
+handle SIGTERM / Ctrl-C to gracefully cancel a transfer.
+
+### Mooltipy is a wrapper
+The mooltipy command is a wrapper for individual utilities. To get help for any
+of the individual utilities you can:
+```
+$ mooltipy data --help
+$ mooltipy login --help
+```
+You can also call any of the utilities directly by prefixing *mp* to the name
+of the utility:
+```
+$ mpdata --help
+$ mplogin --help
 ```
 
 ### Using the Mooltipass module
-To utilize the class:
+To utilize the MooltipassClient class:
 ```python
 from mooltipy import MooltipassClient
 import sys
