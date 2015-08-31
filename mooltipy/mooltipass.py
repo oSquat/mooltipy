@@ -16,8 +16,6 @@
 """Contains the Mooltipass USB command side of our mooltipy project.
 
 """
-# TODO:
-#   * Remove True / False return in lieu of 1 or 0 which compatible.
 
 from array import array
 
@@ -102,12 +100,6 @@ class _Mooltipass(object):
         if self._epin is None:
             self._hid_device.reset()
             raise RuntimeError("Couldn't match the first IN endpoint?")
-
-    @staticmethod
-    def _tf_return(recv):
-        """Return True or False based on typical command response."""
-        DATA_INDEX = 2
-        return (lambda recv: False if recv[DATA_INDEX] == 0 else True)(recv)
 
     def send_packet(self, cmd=0x00, data=None):
         """Sends a packet to our mooltipass.
@@ -229,20 +221,20 @@ class _Mooltipass(object):
     def set_login(self, login):
         """Set a login. (0xA6)
 
-        Returns true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         self.send_packet(CMD_SET_LOGIN, array('B', login + b'\x00'))
-        return self._tf_return(self.recv_packet())
+        return self.recv_packet()[self._DATA_INDEX]
 
     def set_password(self, password):
         """Set a password for current context. (0xA7)
 
-        Returns true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         self.send_packet(CMD_SET_PASSWORD, array('B', password + b'\x00'))
-        return self._tf_return(self.recv_packet())
+        return self.recv_packet()[self._DATA_INDEX]
 
-    def _check_password(self, password):
+    def check_password(self, password):
         """Compare given password to set password for context. (0xA8)
 
         Call check_password() to avoid calling set_password() and
@@ -254,10 +246,10 @@ class _Mooltipass(object):
     def add_context(self, context):
         """Add a context. (0xA9)
 
-        Returns true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         self.send_packet(CMD_ADD_CONTEXT, array('B', context + b'\x00'))
-        return self._tf_return(self.recv_packet())
+        return self.recv_packet()[self._DATA_INDEX]
         # TODO: Is there any way to delete contexts?
 
     def _set_bootloader_password(self, password):
@@ -293,7 +285,7 @@ class _Mooltipass(object):
     def _start_media_import(self):
         """Request send media to Mooltipass. (0xAE)
 
-        Returns true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
         pass
@@ -304,7 +296,7 @@ class _Mooltipass(object):
         Send specially formatted data to the mooltipass as part of a
         media import. <DOCUMENT FORMAT HERE IF POSSIBLE>
 
-        Returns true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         #TODO: Ask for pointer to source containing formatting!
         logging.info('Not yet implemented')
@@ -313,7 +305,7 @@ class _Mooltipass(object):
     def _end_media_import(self):
         """Request end media to Mooltipass. (0xB0)
 
-        Returns true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
         pass
@@ -325,7 +317,7 @@ class _Mooltipass(object):
             param_id - Parameter ID to set
             value - Value to set
 
-        Returns true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         # TODO: Where are paremeters documented?
         logging.info('Not yet implemented')
@@ -345,7 +337,7 @@ class _Mooltipass(object):
     def _reset_card(self):
         """Reset inserted card. (0xB3)
 
-        Returns true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
         pass
@@ -376,7 +368,7 @@ class _Mooltipass(object):
         Arguments:
             login -- Login value up to 62 bytes
 
-        Returns true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
         pass
@@ -389,7 +381,7 @@ class _Mooltipass(object):
         Arguments:
             password -- Password value up to 30 bytes.
 
-        Returns true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
         pass
@@ -400,7 +392,7 @@ class _Mooltipass(object):
         Arguments:
             ??? Not sure, experiment and review python_comms
 
-        Returns true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
         pass
@@ -440,10 +432,10 @@ class _Mooltipass(object):
     def set_data_context(self, context):
         """Set the data context. (0xBE)
 
-        Return true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         self.send_packet(CMD_SET_DATA_SERVICE, array('B', context + b'\x00'))
-        return self._tf_return(self.recv_packet())
+        return self.recv_packet()[self._DATA_INDEX]
 
     def add_data_context(self, context):
         """Add a data context. (0xBF)
@@ -451,11 +443,11 @@ class _Mooltipass(object):
         Arguments:
             context -- Name of context to add.
 
-        Return true/false on success/failure.
+        Return 1 or 0 indicating success or failure.
         """
         print('sending ' + context)
         self.send_packet(CMD_ADD_DATA_SERVICE, array('B', context + b'\x00'))
-        return self._tf_return(self.recv_packet())
+        return self.recv_packet()[self._DATA_INDEX]
 
     def write_data_context(self, data):
         """Write to data context in blocks of 32 bytes. (0xC0)
@@ -485,7 +477,7 @@ class _Mooltipass(object):
                 packet.extend(data[i:i+BLOCK_SIZE])
                 self.send_packet(CMD_WRITE_32B_IN_DN, packet)
                 logging.debug('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
-                if eod == 0 and not self._tf_return(self.recv_packet()):
+                if eod == 0 and not self.recv_packet()[self._DATA_INDEX]:
                     raise RuntimeError('Unexpected return')
 
             return True
@@ -665,7 +657,7 @@ class _Mooltipass(object):
         Arguments:
             ctr_value -- 3 byte CTR value
 
-        Returns 1 or 0 indicating success or failure.
+        Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
         pass
@@ -701,7 +693,7 @@ class _Mooltipass(object):
     def end_memory_management(self):
         """End memory management mode. (0xD3)
 
-        Return true/false on success/failure."""
+        Return 1 or 0 indicating success or failure."""
         self.send_packet(CMD_END_MEMORYMGMT, None)
-        return self._tf_return(self.recv_packet())
+        return self.recv_packet()[self._DATA_INDEX]
 

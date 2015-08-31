@@ -10,7 +10,7 @@ You can install mooltipy using pip.
 user@box:~/$ pip install mooltipy
 ```
 
-### Add contexts
+### Manage Login Contexts
 Manage login contexts with Mooltipy. The example below is a terrible idea
 since you might log your password to .bash_history... but this should be
 fixed soon with self-generating, random passwords.
@@ -31,7 +31,7 @@ $ mooltipy data export ssh_key ./restored_key
 **Warning**: Do not disconnect your mooltipass during data transfer! We do
 handle SIGTERM / Ctrl-C to gracefully cancel a transfer.
 
-### Mooltipy is a wrapper
+### Beneath the Mooltipy Wrapper
 The mooltipy command is a wrapper for individual utilities. To get help for any
 of the individual utilities you can:
 ```
