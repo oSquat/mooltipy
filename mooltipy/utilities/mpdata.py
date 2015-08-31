@@ -113,16 +113,17 @@ if __name__ == '__main__':
 
     main()
 
-    # TODO: Pretty important
-    #   * Alias argument "extract" as alternative to "export" because annoying
-    #       also "upload" & "download"
-    #   * Replace optparse with argparse
-    #   * Python3 compatibility
+    # TODO: Important
     #   * Unexpected return on import to existing context?
+    # TODO: Soon
+    #   * On import, referencing file that doesn't exist causes failure
+    #   * Replace optparse with argparse
+    #   * On export, warn before clobbering file?
+    #   * Warn on large files liable to induce sleep
     # TODO: Eventually
+    #   * Support reading from / writing to stdin / stdout
     #   * Some indication of progress -- transfer can be slow.
     #   * List data contexts
     #   * Delete data contexts
-    #   * Warn on large files liable to induce sleep
-    #   * On import, referencing file that doesn't exist causes failure
-    #   * On export, warn before clobbering file?
+    #   * Alias argument "extract" as alternative to "export" because annoying
+    #       also "upload" & "download"

@@ -83,5 +83,14 @@ if __name__ == '__main__':
 
     main()
 
-    #TODO: theres a lot left to be desired here
+    # TODO:
+    #   * Canceling request to add context loops and can't be terminated.
+    #   * --password= is an awful argument, passwords should be randomly
+    #     generated, obtained via raw_input() or warned against if provided
+    #     by a --password argument (and warning supressed via --quiet if
+    #     absolutely wanted).
+    #   * Call .check_password() before setting password to avoid superfluous
+    #     prompting of the user.
+    #   * Add way of requesting username/password from context -- design for
+    #     batch scripting.
 
