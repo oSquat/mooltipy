@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'mooltipy',
-    version = '0.2.0',
+    version = '0.2.1',
     description = 'Mooltipass command line utilities and development library.',
     url = 'https://github.com/osquat/mooltipy',
     author = 'Vic Simeone',
@@ -20,7 +20,7 @@ setup(
             'Intended Audience :: Developers',
             'Intended Audience :: End Users/Desktop',
     ],
-    packages = ['mooltipy'],
+    packages = find_packages(),
     install_requires = ['pycrypto', 'pyusb==1.0.0b2'],
     entry_points = {
         'console_scripts': [
