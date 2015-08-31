@@ -82,8 +82,11 @@ class _Mooltipass(object):
                 raise RuntimeError('Cannot set device configuration: ' + str(e))
 
         # Get an endpoint instance
-        cfg = self._hid_device.get_active_configuration()
-        self._intf = cfg[(0,0)]
+        try:
+            cfg = self._hid_device.get_active_configuration()
+            self._intf = cfg[(0,0)]
+        except Exception as e:
+            raise RuntimeError('Could not access device: ' + str(e))
 
         # Match the first OUT endpoint
         self._epout = usb.util.find_descriptor(
