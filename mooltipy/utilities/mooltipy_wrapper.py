@@ -50,19 +50,19 @@ def main_options():
 
     # All arguments after argv[1] are passed through to the utility and
     # should not be left for mooltipy_wrapper's call to parse_args() 
-    passthrough_args = None
-    if len(sys.argv) > 2:
-        passthrough_args = sys.argv[2:]
-        sys.argv = sys.argv[0:2]
-        for x in sys.argv:
-            print(x)
-        # Add a dummy entry in argv for args option
-        sys.argv.append(None)
+    #passthrough_args = None
+    #if len(sys.argv) > 2:
+    #    passthrough_args = sys.argv[2:]
+    #    sys.argv = sys.argv[0:2]
+    #    for x in sys.argv:
+    #        print(x)
+    #    # Add a dummy entry in argv for args option
+    #    sys.argv.append(None)
 
     parser = argparse.ArgumentParser(usage=usage)
     parser.add_argument('utility', help='Utility to use.')
     parser.add_argument('args', help='Arguments & options to pass onto utility.',
-            nargs='+')
+            nargs=argparse.REMAINDER)
 
     args = parser.parse_args()
 
@@ -71,9 +71,9 @@ def main_options():
         sys.exit(1)
 
     # Reattatch arguments intended for the utility.
-    if passthrough_args:
-        del sys.argv[2]
-        sys.argv += passthrough_args
+    #if passthrough_args:
+    #    del sys.argv[2]
+    #    sys.argv += passthrough_args
 
     return args
 
