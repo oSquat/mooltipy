@@ -75,6 +75,8 @@ def main_options():
                    'setting this option and specifying the password on the ' + \
                    'command line (terrible option)',
             nargs = '?',
+            default = None,             # Set if -p not present
+            const = '',                 # Set if -p present with no argument
             action = 'store')
     set_parser.add_argument(
             '-l', '--length',
@@ -82,11 +84,13 @@ def main_options():
                    'maximum of 31 characters minus appended character',
             nargs = '?',
             type = int,
+            default = 31,
             action='store')
     set_parser.add_argument(
-            '-s', '--skip',
+            '-i', '--invalid',
             help = 'password characters that can not be used',
             nargs='?',
+            default='',
             action='store')
     set_parser.add_argument(
             '-au',
@@ -122,21 +126,46 @@ def get_context(mooltipass, args):
 
 def set_context(mooltipass, args):
 
+    # TODO: Split some of this into functions - pretty length and complex
+
+    # Fixs if password legth is at max 31 chars and appended char requested
+    if args.ap and args.length == 31:
+        args.length -= 1
+
+    # Generate a random password if no -p argument specified
     if not args.password:
-        print('Automatic password generation not yet implemented.')
-        sys.exit(1)
+        args.password = str()
+        while len(args.password) < args.length:
+            char = chr((ord(os.urandom(1)) % (127 - 32)) + 32)
+            if char in args.invalid:
+                continue
+            args.password += char
 
-    # TODO: validate username / password lengths
+    # Python 2 / 3 compatibility - is there an import or better place for this?
+    try:
+        input = raw_input
+    except:
+        pass
 
+    # Ask for password if -p was specified
+    if len(args.password) == 0:
+        args.password = raw_input('Enter the password to use:')
+
+    # append tab/crlf to credentials
     append = {
         'tab':b'\x09',
         'crlf':b'\x0d',
         None:''
     }
+    if not args.au is None:
+        print('ARGS.AU is not NONE')
 
     args.username += append[args.au]
     args.password += append[args.ap]
 
+    # TODO: validate username / password lengths
+
+    # Set context and credentials
     while not mooltipass.set_context(args.context):
         mooltipass.add_context(args.context)
 
@@ -148,6 +177,7 @@ def set_context(mooltipass, args):
     if not uname_ret:
         print('Set username failed!')
         sys.exit(1)
+
 
     if not mooltipass.set_password(args.password):
         print('Set password failed!')
@@ -201,11 +231,9 @@ if __name__ == '__main__':
     main()
 
     # TODO: Crucial
-    #   * Random password generation
-    #   * Prompt for password if not specified
     #   * Input validation
     # TODO: Important
-    #   * Implement get
+    #   * Implement get password
     #   * Canceling request to add context loops and can't be terminated.
     #   * Call .check_password() before setting password to avoid superfluous
     #     prompting of the user.
