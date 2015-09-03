@@ -65,7 +65,7 @@ class _Mooltipass(object):
         self._hid_device = usb.core.find(idVendor=USB_VID, idProduct=USB_PID)
 
         if self._hid_device is None:
-            raise RuntimeError('Mooltipass not found')
+            raise RuntimeError('Mooltipass not found. Is it plugged in?')
 
         # Different init codes depending on the platform
         if platform.system() == "Linux":
@@ -86,7 +86,7 @@ class _Mooltipass(object):
             cfg = self._hid_device.get_active_configuration()
             self._intf = cfg[(0,0)]
         except Exception as e:
-            raise RuntimeError('Could not access device: ' + str(e))
+            raise RuntimeError('Could not get device config: ' + str(e))
 
         # Match the first OUT endpoint
         self._epout = usb.util.find_descriptor(

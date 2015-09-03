@@ -17,7 +17,7 @@
 
 """Manage contexts containing usernames & passwords."""
 
-from optparse import OptionParser
+import argparse
 import os
 import time
 import sys
@@ -27,38 +27,159 @@ from mooltipy.mooltipass_client import MooltipassClient
 def main_options():
     """Handles command-line interface, arguments & options. """
 
-    # Fix usage message if executed from wrapper
-    utility_called = ''
-    print('utility called: ' + os.path.split(sys.argv[0])[1])
+    # If the wrapper was used to execute our utility instead of directly
+    util = ''
     if os.path.split(sys.argv[0])[1] in ['./mooltipy.py', 'mooltipy']:
-        utility_called = sys.argv[1]
+        # Get the utility name contained in argv[1]
+        util = sys.argv[1]
         del sys.argv[1]
 
-    usage = 'Usage: %prog {utility} [OPTIONS]\n'.format(utility=utility_called)
-    usage +='Example: %prog {utility} '.format(utility=utility_called)
-    usage += 'Lycos.com --login=jsmith --password="not_random"'
+    # Create a string to represent the utility in help messages
+    cmd_util = (' '.join([os.path.split(sys.argv[0])[1], util])).strip()
 
-    parser = OptionParser(usage)
-    parser.add_option('--login', dest='login', metavar='USER',
-            help='login for context')
-    parser.add_option('--password', dest='password', metavar='PASS',
-            help='password for login')
+    description = '{cmd_util} manages Mooltipass login contexts.'.format(cmd_util = cmd_util)
+    usage = '{cmd_util} [-h] [-f] [-q] ... {{get,set,del}} context'.format(cmd_util = cmd_util)
 
-    (options, args) = parser.parse_args()
+    # main
+    parser = argparse.ArgumentParser(usage = usage, description=description)
+    #parser.add_argument('-q','--quiet', action='store_true', help='suppress output and warnings)
+    #parser.add_argument('-v','--verbose', action='store_true', help='turn on verbosity')
 
-    return (options, args)
+    # subparser
+    subparsers = parser.add_subparsers(
+            dest = 'command', help='action to take on context')
+
+    # get
+    # ---
+    get_parser = subparsers.add_parser(
+            'get',
+            help = 'Get a password for given context',
+            prog = cmd_util+' get')
+    get_parser.add_argument("context", help='specify context (e.g. Lycos.com)')
+
+    # set
+    # ---
+    set_parser = subparsers.add_parser(
+            'set',
+            help = 'Set or update a context',
+            prog = cmd_util+' set')
+    set_parser.add_argument('-u','--username',
+            help = 'optional username for the context',
+            default = '',
+            action = 'store')
+    set_parser.add_argument(
+            '-p','--password',
+            help = 'do not set this option to generate a random password ' + \
+                   '(best method); set this option without specifying a ' + \
+                   'password to be promted at runtime (ok method); avoid ' + \
+                   'setting this option and specifying the password on the ' + \
+                   'command line (terrible option)',
+            nargs = '?',
+            action = 'store')
+    set_parser.add_argument(
+            '-l', '--length',
+            help = 'specify maximum password length; default is the ' + \
+                   'maximum of 31 characters minus appended character',
+            nargs = '?',
+            type = int,
+            action='store')
+    set_parser.add_argument(
+            '-s', '--skip',
+            help = 'password characters that can not be used',
+            nargs='?',
+            action='store')
+    set_parser.add_argument(
+            '-au',
+            help = 'Append to the Username a tab or crlf',
+            action = 'store',
+            choices = ['tab','crlf'])
+    set_parser.add_argument(
+            '-ap',
+            help = 'Append to the Password a tab or crlf',
+            action = 'store',
+            choices = ['tab','crlf'])
+    set_parser.add_argument("context", help='specify context (e.g. Lycos.com)')
+
+    # delete
+    # ------
+    del_parser = subparsers.add_parser(
+            'del',
+            help='Delete a context',
+            prog=cmd_util+' del')
+    del_parser.add_argument("context", help='specify context (e.g. Lycos.com)')
+
+    if not len(sys.argv) > 1:
+        parser.print_help()
+        sys.exit(0)
+
+    args = parser.parse_args()
+
+    return args
+
+def get_context(mooltipass, args):
+    print('Not yet implemented.')
+    sys.exit(1)
+
+def set_context(mooltipass, args):
+
+    if not args.password:
+        print('Automatic password generation not yet implemented.')
+        sys.exit(1)
+
+    # TODO: validate username / password lengths
+
+    append = {
+        'tab':b'\x09',
+        'crlf':b'\x0d',
+        None:''
+    }
+
+    args.username += append[args.au]
+    args.password += append[args.ap]
+
+    while not mooltipass.set_context(args.context):
+        mooltipass.add_context(args.context)
+
+    if args.username:
+        uname_ret = mooltipass.set_login(args.username)
+    else:
+        uname_ret = mooltipass.set_login('')
+
+    if not uname_ret:
+        print('Set username failed!')
+        sys.exit(1)
+
+    if not mooltipass.set_password(args.password):
+        print('Set password failed!')
+        sys.exit(1)
+
+
+def del_context(mooltipass, args):
+    print('Not yet implemented.')
+    sys.exit(1)
 
 def main():
 
-    (options, args) = main_options()
+    command_handlers = {
+        'get':get_context,
+        'set':set_context,
+        'del':del_context
+    }
+
+    args = main_options()
 
     mooltipass = MooltipassClient()
 
+    try:
+        pass
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+
     # Ping the mooltipass, an integral part of the initialization process.
     if not mooltipass.ping():
-        logging.error('Mooltipass did not reply to a ping request!')
-        print('failure')
-        sys.exit(0)
+        print('Mooltipass did not reply to a ping request!')
+        sys.exit(1)
 
     # Ensure Mooltipass status
     quiet_bool = False
@@ -66,31 +187,28 @@ def main():
         status = mooltipass.get_status()
         if status == 5:
             break
-        logging.debug('Status != 5... it is: {0}'.format(status))
         if not quiet_bool:
             print('Insert a card and unlock the Mooltipass...')
         quiet_bool = True
         time.sleep(2)
     quiet_bool = False
 
-    while not mooltipass.set_context(args[0]):
-        mooltipass.add_context(args[0])
-
-    mooltipass.set_login(options.login)
-    mooltipass.set_password(options.password)
+    command_handlers[args.command](mooltipass, args)
+    sys.exit(0)
 
 if __name__ == '__main__':
 
     main()
 
-    # TODO:
+    # TODO: Crucial
+    #   * Random password generation
+    #   * Prompt for password if not specified
+    #   * Input validation
+    # TODO: Important
+    #   * Implement get
     #   * Canceling request to add context loops and can't be terminated.
-    #   * --password= is an awful argument, passwords should be randomly
-    #     generated, obtained via raw_input() or warned against if provided
-    #     by a --password argument (and warning supressed via --quiet if
-    #     absolutely wanted).
     #   * Call .check_password() before setting password to avoid superfluous
     #     prompting of the user.
-    #   * Add way of requesting username/password from context -- design for
-    #     batch scripting.
-
+    #   * Implement --length and --skip
+    # TODO: Eventually
+    #   * Implement delete
