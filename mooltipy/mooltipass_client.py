@@ -36,6 +36,11 @@ class MooltipassClient(_Mooltipass):
         super(MooltipassClient, self).__init__()
         if not self.ping():
             raise RuntimeError('Mooltipass did not respond to ping.')
+        version_info = self.get_version()
+        self.flash_size = version_info[2]
+        self.version = version_info[3:].tostring()
+        print('Connected to Mooltipass {} w/ {} Mb Flash'.format(self.version,
+              self.flash_size))
 
     @property
     def status(self):
