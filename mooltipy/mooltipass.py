@@ -265,12 +265,12 @@ class _Mooltipass(object):
         logging.info('Not yet implemented')
         pass
 
-    def _get_random_number(self):
+    def get_random_number(self):
         """Get 32 random bytes. (0xAC)"""
         # TODO: Is this intended to be directly used in generation of
         #   a random password, or as seed in external PRNG?
-        logging.info('Not yet implemented')
-        pass
+        self.send_packet(CMD_GET_RANDOM_NUMBER, None)
+        return self.recv_packet()[self._DATA_INDEX]
 
     def start_memory_management(self, timeout=20000):
         """Enter memory management mode. (0xAD)
