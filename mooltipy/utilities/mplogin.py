@@ -21,6 +21,7 @@ import argparse
 import os
 import time
 import sys
+import getpass
 
 from mooltipy.mooltipass_client import MooltipassClient
 
@@ -133,7 +134,7 @@ def set_context(mooltipass, args):
         args.length -= 1
 
     # Generate a random password if no -p argument specified
-    if not args.password:
+    if args.password is None:
         args.password = str()
         while len(args.password) < args.length:
             char = chr((ord(os.urandom(1)) % (127 - 32)) + 32)
@@ -149,7 +150,7 @@ def set_context(mooltipass, args):
 
     # Ask for password if -p was specified
     if len(args.password) == 0:
-        args.password = raw_input('Enter the password to use:')
+        args.password = getpass.getpass('Enter the password to use:')
 
     # append tab/crlf to credentials
     append = {
