@@ -94,6 +94,10 @@ def main_options():
             default='',
             action='store')
     set_parser.add_argument(
+            '-an', '--anum',
+            help = 'Alphanumeric characters only [a-zA-Z0-9]',
+            action='store_true')
+    set_parser.add_argument(
             '-au',
             help = 'Append to the Username a tab or crlf',
             action = 'store',
@@ -138,6 +142,9 @@ def set_context(mooltipass, args):
         args.password = str()
         while len(args.password) < args.length:
             char = chr((ord(os.urandom(1)) % (127 - 32)) + 32)
+            if args.anum:
+		while not str(char).isalpha():
+                    char = chr((ord(os.urandom(1)) % (127 - 32)) + 32)
             if char in args.invalid:
                 continue
             args.password += char
