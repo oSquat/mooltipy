@@ -6,7 +6,7 @@ Under heavy development. This could be called alpha stage work at the moment.
 
 
 ## Installation & Usage
-You can the lastest stable release of mooltipy using pip.
+You can install the lastest stable release of mooltipy using pip.
 ```
 user@box:~/$ sudo pip install mooltipy
 ```
