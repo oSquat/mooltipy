@@ -129,8 +129,18 @@ def get_context(mooltipass, args):
     print('Not yet implemented.')
     sys.exit(1)
 
-def set_context(mooltipass, args):
+def generate_random_password(args):
+    new_password = []
+    while len(new_password) < args.length:
+        char = chr((ord(os.urandom(1)) % (127 - 32)) + 32)
+        if args.anum and char.isalpha():
+            continue
+        if char in args.invalid:
+            continue
+        new_password += char
+    args.password = ''.join(new_password)
 
+def set_context(mooltipass, args):
     # TODO: Split some of this into functions - pretty length and complex
 
     # Fixs if password legth is at max 31 chars and appended char requested
@@ -139,21 +149,7 @@ def set_context(mooltipass, args):
 
     # Generate a random password if no -p argument specified
     if args.password is None:
-        args.password = str()
-        while len(args.password) < args.length:
-            char = chr((ord(os.urandom(1)) % (127 - 32)) + 32)
-            if args.anum:
-		while not str(char).isalpha():
-                    char = chr((ord(os.urandom(1)) % (127 - 32)) + 32)
-            if char in args.invalid:
-                continue
-            args.password += char
-
-    # Python 2 / 3 compatibility - is there an import or better place for this?
-    try:
-        input = raw_input
-    except:
-        pass
+        generate_random_password(args)
 
     # Ask for password if -p was specified
     if len(args.password) == 0:
@@ -165,13 +161,19 @@ def set_context(mooltipass, args):
         'crlf':b'\x0d',
         None:''
     }
-    if not args.au is None:
+    if args.au is not None:
         print('ARGS.AU is not NONE')
 
     args.username += append[args.au]
     args.password += append[args.ap]
 
-    # TODO: validate username / password lengths
+    if len(args.username) > 61:
+        print('Username must be <= 61 characters long!')
+        sys.exit(1)
+
+    if len(args.password) > 31:
+        print('Password must be <= 31 characters long!')
+        sys.exit(1)
 
     # Set context and credentials
     while not mooltipass.set_context(args.context):
@@ -186,11 +188,9 @@ def set_context(mooltipass, args):
         print('Set username failed!')
         sys.exit(1)
 
-
     if not mooltipass.set_password(args.password):
         print('Set password failed!')
         sys.exit(1)
-
 
 def del_context(mooltipass, args):
     print('Not yet implemented.')

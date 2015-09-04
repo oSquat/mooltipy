@@ -189,9 +189,13 @@ class _Mooltipass(object):
         """Get mooltipass firmware version. (0xA2)
 
         Returns response from mooltipass:
-            recv[0]  -- First byte conains the FLASH_CHIP define
+            recv[0]  -- Size of response
+            recv[1]  -- Response Command ID
+            recv[2]  -- Byte contains the FLASH_CHIP define
                         specifying how much memory the unit has.
-            recv[1:] -- String identifying the version.
+                        Eg. 4 == 4Mb
+            recv[3:] -- String identifying the version.
+                        Eg. "v1"
         """
         self.send_packet(CMD_VERSION, None)
         return self.recv_packet()
