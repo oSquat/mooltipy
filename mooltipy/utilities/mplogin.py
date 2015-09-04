@@ -130,15 +130,18 @@ def get_context(mooltipass, args):
     sys.exit(1)
 
 def generate_random_password(args):
+    """Generate and return a random password."""
+    # TODO: Consider if passwords could stick around in memory after
+    #   execution and how immutable vs mutable types could effect this.
     new_password = []
     while len(new_password) < args.length:
         char = chr((ord(os.urandom(1)) % (127 - 32)) + 32)
-        if args.anum and char.isalpha():
+        if args.anum and not char.isalnum():
             continue
         if char in args.invalid:
             continue
         new_password += char
-    args.password = ''.join(new_password)
+    return ''.join(new_password)
 
 def set_context(mooltipass, args):
     # TODO: Split some of this into functions - pretty length and complex
@@ -149,7 +152,7 @@ def set_context(mooltipass, args):
 
     # Generate a random password if no -p argument specified
     if args.password is None:
-        generate_random_password(args)
+        args.password = generate_random_password(args)
 
     # Ask for password if -p was specified
     if len(args.password) == 0:
