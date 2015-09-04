@@ -1,22 +1,28 @@
 # Mooltipy
-A Mooltipass Python library and command line management utilities.
+A [Mooltipass](http://themooltipass.com) Python library and command line
+management utilities.
 
-Under heavy development. I just got my unit ~ a couple weeks ago. This could be
-called alpha stage work at the moment.
+Under heavy development. This could be called alpha stage work at the moment.
+
 
 ## Installation & Usage
-You can install mooltipy using pip.
+You can the lastest stable release of mooltipy using pip.
 ```
-user@box:~/$ pip install mooltipy
+user@box:~/$ sudo pip install mooltipy
 ```
 
 ### Manage Login Contexts
-Manage login contexts with Mooltipy. The example below is a terrible idea
-since you might log your password to .bash_history... but this should be
-fixed soon with self-generating, random passwords.
+Add login contexts with mooltipy:
 
 ```
-$ mooltipy login tripod.com --login=user_name --password="P@ssw0rd"
+# Add or update user_name at example.com with a randomly generated password.
+$ mooltipy set example.com -u user_name
+
+# ... ask for the password rather than generating one.
+$ mooltipy set example.com -u user_name -p
+
+# ... some sites only allow alphanumeric passwords, so don't generate symbols.
+$ mooltipy set example.com -u user_name -c alnum
 ```
 
 ### Manage Data Contexts
@@ -59,5 +65,15 @@ else:
     print('Failed to connect to mooltipass.')
     sys.exit(0)
 
-mootipass.do_limited_things()
+mootipass.do_some_stuff()
 ```
+
+We'll document more soon, for now check out the MooltipassClient and
+Mooltipass classes to see what's implemented.
+
+### Support
+Prolems, questions, comments, feature requests, flames? I'm
+[mooltigeek](http://reddit.com/u/mooltigeek) on the
+[Mooltipass subreddit](http://reddit.com/r/mooltipass) and I idle on freenode
+as modest in #mooltipass. E-mailing mooltipy [at my domain] oSquat.com will reach
+me very quickly too.
