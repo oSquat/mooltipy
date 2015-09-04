@@ -38,13 +38,18 @@ def main_options():
     # Create a string to represent the utility in help messages
     cmd_util = (' '.join([os.path.split(sys.argv[0])[1], util])).strip()
 
-    description = '{cmd_util} manages Mooltipass login contexts.'.format(cmd_util = cmd_util)
-    usage = '{cmd_util} [-h] [-f] [-q] ... {{get,set,del}} context'.format(cmd_util = cmd_util)
+    description = '{cmd_util} manages Mooltipass login contexts.'.format(
+            cmd_util = cmd_util)
+    usage = '{cmd_util} [-h] ... {{get,set,del}} context'.format(
+            cmd_util = cmd_util)
 
     # main
     parser = argparse.ArgumentParser(usage = usage, description=description)
-    #parser.add_argument('-q','--quiet', action='store_true', help='suppress output and warnings)
-    #parser.add_argument('-v','--verbose', action='store_true', help='turn on verbosity')
+    # TODO: Necessary -q -v -f options? Maybe with read / delete.
+    #parser.add_argument('-q','--quiet', action='store_true',
+    #        help='suppress output and warnings)
+    #parser.add_argument('-v','--verbose', action='store_true',
+    #        help='turn on verbosity')
 
     # subparser
     subparsers = parser.add_subparsers(
@@ -126,22 +131,26 @@ def main_options():
     return args
 
 def get_context(mooltipass, args):
+    """Request username & password for a given context."""
     print('Not yet implemented.')
     sys.exit(1)
 
 def generate_random_password(args):
+    """Generate and return a random password."""
+    # TODO: Consider if passwords could stick around in memory after
+    #   execution and how immutable vs mutable types could effect this.
     new_password = []
     while len(new_password) < args.length:
         char = chr((ord(os.urandom(1)) % (127 - 32)) + 32)
-        if args.anum and char.isalpha():
+        if args.anum and not char.isalnum():
             continue
         if char in args.invalid:
             continue
         new_password += char
-    args.password = ''.join(new_password)
+    return ''.join(new_password)
 
 def set_context(mooltipass, args):
-    # TODO: Split some of this into functions - pretty length and complex
+    """Create context and add or update a username & set the password."""
 
     # Fixs if password legth is at max 31 chars and appended char requested
     if args.ap and args.length == 31:
@@ -149,7 +158,7 @@ def set_context(mooltipass, args):
 
     # Generate a random password if no -p argument specified
     if args.password is None:
-        generate_random_password(args)
+        args.password = generate_random_password(args)
 
     # Ask for password if -p was specified
     if len(args.password) == 0:
@@ -161,9 +170,6 @@ def set_context(mooltipass, args):
         'crlf':b'\x0d',
         None:''
     }
-    if args.au is not None:
-        print('ARGS.AU is not NONE')
-
     args.username += append[args.au]
     args.password += append[args.ap]
 
@@ -176,6 +182,7 @@ def set_context(mooltipass, args):
         sys.exit(1)
 
     # Set context and credentials
+    # TODO: Interpret user denying addition of context and quit
     while not mooltipass.set_context(args.context):
         mooltipass.add_context(args.context)
 
@@ -193,6 +200,7 @@ def set_context(mooltipass, args):
         sys.exit(1)
 
 def del_context(mooltipass, args):
+    """Delete a context in its entirety."""
     print('Not yet implemented.')
     sys.exit(1)
 
@@ -228,7 +236,7 @@ def main():
         if not quiet_bool:
             print('Insert a card and unlock the Mooltipass...')
         quiet_bool = True
-        time.sleep(2)
+        time.sleep(1)
     quiet_bool = False
 
     command_handlers[args.command](mooltipass, args)
