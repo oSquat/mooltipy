@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'mooltipy',
-    version = '0.2.1',
+    version = '0.3.0',
     description = 'Mooltipass command line utilities and development library.',
     url = 'https://github.com/osquat/mooltipy',
     author = 'Vic Simeone',
