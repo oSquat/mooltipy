@@ -18,11 +18,12 @@ Add login contexts with mooltipy:
 # Add or update user_name at example.com with a randomly generated password.
 $ mooltipy set example.com -u user_name
 
+# ... some sites only allow alphanumeric passwords; avoid symbols in a generated password.
+$ mooltipy set example.com -u user_name -c alnum
+
 # ... ask for the password rather than generating one.
 $ mooltipy set example.com -u user_name -p
 
-# ... some sites only allow alphanumeric passwords, so don't generate symbols.
-$ mooltipy set example.com -u user_name -c alnum
 ```
 
 ### Manage Data Contexts
@@ -37,7 +38,7 @@ $ mooltipy data export ssh_key ./restored_key
 **Warning**: Do not disconnect your mooltipass during data transfer! We do
 handle SIGTERM / Ctrl-C to gracefully cancel a transfer.
 
-### Beneath the Mooltipy Wrapper
+### Mooltipy is a Wrapper
 The mooltipy command is a wrapper for individual utilities. To get help for any
 of the individual utilities you can:
 ```
