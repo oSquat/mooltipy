@@ -126,6 +126,7 @@ def main_options():
     return args
 
 def get_context(mooltipass, args):
+    """Request username & password for a given context."""
     print('Not yet implemented.')
     sys.exit(1)
 
@@ -144,7 +145,7 @@ def generate_random_password(args):
     return ''.join(new_password)
 
 def set_context(mooltipass, args):
-    # TODO: Split some of this into functions - pretty length and complex
+    """Create context and add or update a username & set the password."""
 
     # Fixs if password legth is at max 31 chars and appended char requested
     if args.ap and args.length == 31:
@@ -164,9 +165,6 @@ def set_context(mooltipass, args):
         'crlf':b'\x0d',
         None:''
     }
-    if args.au is not None:
-        print('ARGS.AU is not NONE')
-
     args.username += append[args.au]
     args.password += append[args.ap]
 
@@ -179,6 +177,7 @@ def set_context(mooltipass, args):
         sys.exit(1)
 
     # Set context and credentials
+    # TODO: Interpret user denying addition of context and quit
     while not mooltipass.set_context(args.context):
         mooltipass.add_context(args.context)
 
@@ -196,6 +195,7 @@ def set_context(mooltipass, args):
         sys.exit(1)
 
 def del_context(mooltipass, args):
+    """Delete a context in its entirety."""
     print('Not yet implemented.')
     sys.exit(1)
 
@@ -231,7 +231,7 @@ def main():
         if not quiet_bool:
             print('Insert a card and unlock the Mooltipass...')
         quiet_bool = True
-        time.sleep(2)
+        time.sleep(1)
     quiet_bool = False
 
     command_handlers[args.command](mooltipass, args)
