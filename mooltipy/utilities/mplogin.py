@@ -111,7 +111,7 @@ def main_options():
             help = 'character set for use in random password generation ' + \
                    'you can currently use {an|alnum|alphanumeric} to only ' + \
                    'use alpha-numeric values',
-            nargs='+',
+            nargs='?',
             action='store')
     set_parser.add_argument(
             '-au',
@@ -139,7 +139,8 @@ def main_options():
 
     args = parser.parse_args()
 
-    if set(args.charset).intersection(['an', 'alnum', 'alphanum', 'alphanumeric']):
+    if args.charset is not None and \
+            args.charset in ['an', 'alnum', 'alphanum', 'alphanumeric']:
         args.charset = 'an'
 
     return args
