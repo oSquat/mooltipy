@@ -38,13 +38,18 @@ def main_options():
     # Create a string to represent the utility in help messages
     cmd_util = (' '.join([os.path.split(sys.argv[0])[1], util])).strip()
 
-    description = '{cmd_util} manages Mooltipass login contexts.'.format(cmd_util = cmd_util)
-    usage = '{cmd_util} [-h] [-f] [-q] ... {{get,set,del}} context'.format(cmd_util = cmd_util)
+    description = '{cmd_util} manages Mooltipass login contexts.'.format(
+            cmd_util = cmd_util)
+    usage = '{cmd_util} [-h] ... {{get,set,del}} context'.format(
+            cmd_util = cmd_util)
 
     # main
     parser = argparse.ArgumentParser(usage = usage, description=description)
-    #parser.add_argument('-q','--quiet', action='store_true', help='suppress output and warnings)
-    #parser.add_argument('-v','--verbose', action='store_true', help='turn on verbosity')
+    # TODO: Necessary -q -v -f options? Maybe with read / delete.
+    #parser.add_argument('-q','--quiet', action='store_true',
+    #        help='suppress output and warnings)
+    #parser.add_argument('-v','--verbose', action='store_true',
+    #        help='turn on verbosity')
 
     # subparser
     subparsers = parser.add_subparsers(
