@@ -29,7 +29,9 @@ import time
 import usb.core
 
 from .constants import *
+from collections import defaultdict
 
+logging.basicConfig(level=logging.INFO)
 
 class _Mooltipass(object):
     """Mooltipass -- Outlines access to Mooltipass's USB commands.
@@ -142,22 +144,39 @@ class _Mooltipass(object):
         while True:
             recv = self._epin.read(self._epin.wMaxPacketSize, timeout=timeout)
             #logging.debug('\n\t' + str(recv))
-            if recv is not None or recv[0] == 0xB9:
-                # Unit sends 0xB9 when user is entering their PIN.
-                break
-            if recv[0] == 0xC4:
-                # The mooltipass may request the client resend its
-                # previous packet. I have not yet encountered this, but
-                # I guess it should be passed back to the calling
-                # function... alternatively we should mingle the send
-                # and receive methods or maybe create a FIFO pipe and
-                # "peek" at the contents in send before moving back to
-                # the calling function which would then recv_packet.
-                # One more thought, maybe just find out under what
-                # circumstances a 0xC4 may be received (e.g. data xfer
-                # only). Just leaving some thoughts.
-                print('HEY I GOT A 0xC4!')
+            if recv is not None:
+                if recv[1] == 0xB9:
+                    # Unit sends 0xB9 when user is entering their PIN.
+                    break
+                elif recv[1] == CMD_DEBUG:
+                    debug_msg = struct.unpack('{}s'.format(recv[0]-1), recv[2:recv[0]+1])[0]
+                    if debug_msg == "#MBE":
+                        print("Received Memory Boundary Error Callback!")
+                    elif debug_msg == "#NM":
+                        print("Received Node Mgmt Critical Error Callback!")
+                    elif debug_msg == "#NMP":
+                        print("Received Node Mgmt Permission Validity Error Callback!")
+                    else:
+                        print("Received unknown debug message {}".format(debug_msg))
+                    print('Exiting...')
+                    sys.exit(1)
+                elif recv[1] == 0xC4:
+                    # The mooltipass may request the client resend its
+                    # previous packet. I have not yet encountered this, but
+                    # I guess it should be passed back to the calling
+                    # function... alternatively we should mingle the send
+                    # and receive methods or maybe create a FIFO pipe and
+                    # "peek" at the contents in send before moving back to
+                    # the calling function which would then recv_packet.
+                    # One more thought, maybe just find out under what
+                    # circumstances a 0xC4 may be received (e.g. data xfer
+                    # only). Just leaving some thoughts.
+                    print('HEY I GOT A 0xC4!')
+                else:
+                    break
             time.sleep(.5)
+        logging.debug('RX Packet - CMD:0x{:x} Length:{}'.format(recv[1], recv[0]))
+        logging.debug('{}'.format(recv[2:]))
         return recv
 
     def ping(self, data):
@@ -287,7 +306,7 @@ class _Mooltipass(object):
                     inaction.
         """
         self.send_packet(CMD_START_MEMORYMGMT, None)
-        return self._tf_return(self.recv_packet(timeout))
+        return self.recv_packet(timeout)
 
     def _start_media_import(self):
         """Request send media to Mooltipass. (0xAE)
@@ -540,11 +559,12 @@ class _Mooltipass(object):
 
     # 0xC4 is reserved for response from Mooltipass.
 
-    class Node(object):
+    class ParentNode(object):
         """Represent node."""
         def __init__(
                 self,
                 node_addr,
+                flags,
                 prev_parent_addr,
                 next_parent_addr,
                 next_child_addr,
@@ -555,6 +575,43 @@ class _Mooltipass(object):
             self.next_parent_addr = next_parent_addr
             self.next_child_addr = next_child_addr
             self.service_name = service_name
+        
+        def __str__(self):
+            return "<{}: Address:0x{:x}, PrevParent:0x{:x}, NextParent:0x{:x}, NextChild:0x{:x}, ServiceName:{}>".format(self.__class__.__name__, self.node_addr, self.prev_parent_addr, self.next_parent_addr, self.next_child_addr, self.service_name)
+
+        def __repr__(self):
+            return str(self)
+
+    class ChildNode(object):
+        def __init__(
+                self,
+                node_addr,
+                flags,
+                prev_child_addr,
+                next_child_addr,
+                description,
+                date_created,
+                date_last_used,
+                ctr,
+                login,
+                password):
+            self.node_addr = node_addr
+            self.flags = flags
+            self.prev_child_addr = prev_child_addr
+            self.next_child_addr = next_child_addr
+            self.description = description
+            self.date_created = date_created
+            self.date_last_used = date_last_used
+            self.ctr = ctr
+            self.login = login
+            self.password = password
+        
+        def __str__(self):
+            return "<{}: Address:0x{:x} PrevChild:0x{:x} NextChild:0x{:x} Login:{}>".format(self.__class__.__name__, self.node_addr, self.prev_child_addr, self.next_child_addr, self.login)
+
+        def __repr__(self):
+            return str(self)
+
 
     def read_node(self, node_number):
         """Read a node in flash. (0xC5)
@@ -564,32 +621,77 @@ class _Mooltipass(object):
 
         Return the node or 0x00 on error.
         """
-        node_addr = struct.pack('H', node_number)
+        node_addr = struct.pack('<H', node_number)
         data = array('B', node_addr)
         self.send_packet(CMD_READ_FLASH_NODE, data)
 
         recv = self.recv_packet()
-        flags, prev_parent_addr, next_parent_addr, next_child_addr = \
-            struct.unpack('HHHH', recv[self._DATA_INDEX:self._DATA_INDEX+8])
+        recv_size = recv[0]
+        try:
+            while recv_size == 62:
+                recv_extra = self.recv_packet()
+                recv_size = recv_extra[0]
+                recv.extend(recv_extra[self._DATA_INDEX:])
+        except usb.core.USBError:
+            # Skip timeout once all packets are recieved
+            pass
+        flags = struct.unpack('<H', recv[self._DATA_INDEX:self._DATA_INDEX+2])[0]
 
-        # TODO: Make this not ugly
-        recv = recv[self._DATA_INDEX+8:self._DATA_INDEX+66]
-        recv_unpacked = struct.unpack(str(len(recv))+'s', recv)[0]
-        service_name = str()
-        for c in recv_unpacked:
-            if ord(c) == 0:
-                break
-            else:
-                service_name += c
+        if flags & 0xC000 == 0x00:
+            # This is a parent node
+            prev_parent_addr, next_parent_addr, next_child_addr = \
+                struct.unpack('<HHH', recv[self._DATA_INDEX+2:self._DATA_INDEX+8])
+            recv = recv[self._DATA_INDEX+8:self._DATA_INDEX+66]
+            # TODO: Make this not ugly
+            recv_unpacked = struct.unpack(str(len(recv))+'s', recv)[0]
+            service_name = str()
+            for c in recv_unpacked:
+                if ord(c) == 0:
+                    break
+                else:
+                    service_name += c
+            return self.ParentNode(
+                node_number,
+                flags,
+                prev_parent_addr,
+                next_parent_addr,
+                next_child_addr,
+                service_name)
 
-        node = self.Node(
-            flags,
-            prev_parent_addr,
-            next_parent_addr,
-            next_child_addr,
-            service_name)
-
-        return node
+        elif flags & 0xC000 == 0x4000:
+            # This is a credential child node
+            # TODO: Cleanup. Make less ugly.
+            prev_child_addr, next_child_addr = struct.unpack("<HH", recv[self._DATA_INDEX+2:self._DATA_INDEX+6])
+            recv = recv[self._DATA_INDEX+6:]
+            descr = struct.unpack("<24s", recv[:24])
+            recv = recv[24:]
+            date_created, date_last_used, ctr1, ctr2, ctr3 = struct.unpack("<HH3b", recv[:7])
+            ctr = (ctr1 << 16) + (ctr2 << 8) + ctr3
+            recv = recv[7:]
+            login, password = struct.unpack("63s32s", recv[:95])
+            return self.ChildNode(node_number, flags, prev_child_addr, next_child_addr, descr[0], date_created, date_last_used, ctr, login, password)
+        elif flags & 0xC000 == 0x8000:
+            # This is the start of a data sequence
+            pass
+        else:
+            print("Unknown node type received!")
+    
+    def read_all_nodes(self):
+        # TODO: Make less ugly
+        node_list = defaultdict(list)
+        starting_address = self.get_starting_parent_address()
+        parent_node = self.read_node(starting_address)
+        while parent_node.next_parent_addr != 0:
+            if parent_node.next_child_addr == 0:
+                parent_node = self.read_node(parent_node.next_parent_addr)
+                continue
+            child_node = self.read_node(parent_node.next_child_addr)
+            node_list[parent_node.service_name].append(child_node)
+            while child_node.next_child_addr != 0:
+                child_node = self.read_node(child_node.next_child_addr)
+                node_list[parent_node.service_name].append(child_node)
+            parent_node = self.read_node(parent_node.next_parent_addr)
+        return node_list
 
     def _write_node(self, node_number, packet_number):
         """Write a node in flash. (0xC6)
