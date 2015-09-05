@@ -679,18 +679,20 @@ class _Mooltipass(object):
     def read_all_nodes(self):
         # TODO: Make less ugly
         node_list = defaultdict(list)
-        starting_address = self.get_starting_parent_address()
-        parent_node = self.read_node(starting_address)
-        while parent_node.next_parent_addr != 0:
+        parent_address = self.get_starting_parent_address()
+        while True:
+            parent_node = self.read_node(parent_address)
             if parent_node.next_child_addr == 0:
-                parent_node = self.read_node(parent_node.next_parent_addr)
-                continue
-            child_node = self.read_node(parent_node.next_child_addr)
-            node_list[parent_node.service_name].append(child_node)
-            while child_node.next_child_addr != 0:
-                child_node = self.read_node(child_node.next_child_addr)
+                logging.info("Skipping {} with no children".format(parent_node.service_name))
+            else:
+                child_node = self.read_node(parent_node.next_child_addr)
                 node_list[parent_node.service_name].append(child_node)
-            parent_node = self.read_node(parent_node.next_parent_addr)
+                while child_node.next_child_addr != 0:
+                    child_node = self.read_node(child_node.next_child_addr)
+                    node_list[parent_node.service_name].append(child_node)
+            parent_address = parent_node.next_parent_addr
+            if parent_address == 0:
+                break
         return node_list
 
     def _write_node(self, node_number, packet_number):
