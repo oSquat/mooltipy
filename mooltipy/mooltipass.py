@@ -635,21 +635,15 @@ class _Mooltipass(object):
         except usb.core.USBError:
             # Skip timeout once all packets are recieved
             pass
-        flags = struct.unpack('<H', recv[self._DATA_INDEX:self._DATA_INDEX+2])[0]
 
+        # Use flags to figure out the node type
+        flags = struct.unpack('<H', recv[self._DATA_INDEX:self._DATA_INDEX+2])[0]
         if flags & 0xC000 == 0x00:
             # This is a parent node
             prev_parent_addr, next_parent_addr, next_child_addr = \
                 struct.unpack('<HHH', recv[self._DATA_INDEX+2:self._DATA_INDEX+8])
             recv = recv[self._DATA_INDEX+8:self._DATA_INDEX+66]
-            # TODO: Make this not ugly
-            recv_unpacked = struct.unpack(str(len(recv))+'s', recv)[0]
-            service_name = str()
-            for c in recv_unpacked:
-                if ord(c) == 0:
-                    break
-                else:
-                    service_name += c
+            service_name = struct.unpack('<{}s'.format(len(recv)), recv)[0].strip('\0')
             return self.ParentNode(
                 node_number,
                 flags,
@@ -660,30 +654,23 @@ class _Mooltipass(object):
 
         elif flags & 0xC000 == 0x4000:
             # This is a credential child node
-            # TODO: Cleanup. Make less ugly.
-            prev_child_addr, next_child_addr = struct.unpack("<HH", recv[self._DATA_INDEX+2:self._DATA_INDEX+6])
-            recv = recv[self._DATA_INDEX+6:]
-            descr = struct.unpack("<24s", recv[:24])
-            recv = recv[24:]
-            date_created, date_last_used, ctr1, ctr2, ctr3 = struct.unpack("<HH3b", recv[:7])
+            prev_child_addr, next_child_addr, descr, date_created, date_last_used, ctr1, ctr2, ctr3, login, password = struct.unpack("<HH24sHH3b63s32s", recv[self._DATA_INDEX+2:self._DATA_INDEX+132])
             ctr = (ctr1 << 16) + (ctr2 << 8) + ctr3
-            recv = recv[7:]
-            login, password = struct.unpack("63s32s", recv[:95])
             return self.ChildNode(node_number, flags, prev_child_addr, next_child_addr, descr[0], date_created, date_last_used, ctr, login, password)
         elif flags & 0xC000 == 0x8000:
             # This is the start of a data sequence
-            pass
+            print("Data nodes are not yet supported!")
         else:
             print("Unknown node type received!")
     
     def read_all_nodes(self):
-        # TODO: Make less ugly
         node_list = defaultdict(list)
         parent_address = self.get_starting_parent_address()
         while True:
             parent_node = self.read_node(parent_address)
             if parent_node.next_child_addr == 0:
-                logging.info("Skipping {} with no children".format(parent_node.service_name))
+                logging.info("Skipping {} with no children"\
+                             .format(parent_node.service_name))
             else:
                 child_node = self.read_node(parent_node.next_child_addr)
                 node_list[parent_node.service_name].append(child_node)

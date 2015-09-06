@@ -142,7 +142,7 @@ def get_context(mooltipass, args):
     print('Accept memory management mode to continue...')
     mooltipass.start_memory_management()
     
-    if args.context != 'all':
+    if args.context.lower() != 'all':
         print('Not yet implemented.')
         sys.exit(1)
     else:
