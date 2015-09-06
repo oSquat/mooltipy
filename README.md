@@ -35,8 +35,8 @@ $ mooltipy data import ssh_key ~/.ssh/id_rsa
 $ mooltipy data export ssh_key ./restored_key
 ```
 
-**Warning**: Do not disconnect your mooltipass during data transfer! We do
-handle SIGTERM / Ctrl-C to gracefully cancel a transfer.
+**Warning**: Do not disconnect your mooltipass during data transfer! Ctrl-C can
+be used to gracefully cancel a transfer.
 
 ### Mooltipy is a Wrapper
 The mooltipy command is a wrapper for individual utilities. To get help for any
@@ -73,7 +73,7 @@ We'll document more soon, for now check out the MooltipassClient and
 Mooltipass classes to see what's implemented.
 
 ### Support
-Prolems, questions, comments, feature requests, flames? I'm
+Problems, questions, comments, feature requests, flames? I'm
 [mooltigeek](http://reddit.com/u/mooltigeek) on the
 [Mooltipass subreddit](http://reddit.com/r/mooltipass) and I idle on freenode
 as modest in #mooltipass. E-mailing mooltipy [at my domain] oSquat.com will reach
