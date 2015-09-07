@@ -234,15 +234,29 @@ class _Mooltipass(object):
         self.send_packet(CMD_CONTEXT, array('B', context + b'\x00'))
         return self.recv_packet(10000)[self._DATA_INDEX]
 
-    def _get_login(self):
-        """Get the login for current context. (0xA4)"""
-        logging.info('Not yet implemented')
-        pass
+    def get_login(self):
+        """Get the login for current context. (0xA4)
 
-    def _get_password(self):
-        """Get the password for current context. (0xA5)"""
-        logging.info('Not yet implemented')
-        pass
+        Returns the login as a string or 0 on failure.
+        """
+        self.send_packet(CMD_GET_LOGIN, None)
+        recv = self.recv_packet()[self._DATA_INDEX:]
+        if recv[0] == 0x00:
+            return 0
+        else:
+            return struct.unpack('<{}s'.format(len(recv)), recv)[0].strip('\0')
+
+    def get_password(self):
+        """Get the password for current context. (0xA5)
+
+        Returns the password as a string or 0 on failure.
+        """
+        self.send_packet(CMD_GET_PASSWORD, None)
+        recv = self.recv_packet()[self._DATA_INDEX:]
+        if recv[0] == 0x00:
+            return 0
+        else:
+            return struct.unpack('<{}s'.format(len(recv)), recv)[0].strip('\0')
 
     def set_login(self, login):
         """Set a login. (0xA6)
