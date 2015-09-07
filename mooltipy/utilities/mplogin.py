@@ -133,13 +133,12 @@ def get_all_contexts(mooltipass, args):
     """Returns a list of all contexts for the authenticated user"""
     contexts = mooltipass.read_all_nodes()
     for ctx in contexts.keys():
-        print('Context {}'.format(ctx))
+        print('Context {}'.format(ctx.service_name))
         for login in contexts[ctx]:
             print('  Login: {}'.format(login.login))
         
 def get_context(mooltipass, args):
     """Request username & password for a given context."""
-    print('Accept memory management mode to continue...')
     mooltipass.start_memory_management()
     
     if args.context.lower() != 'all':
@@ -148,7 +147,6 @@ def get_context(mooltipass, args):
     else:
         get_all_contexts(mooltipass, args)
 
-    print('Exiting memory management mode.')
     mooltipass.end_memory_management()
 
 

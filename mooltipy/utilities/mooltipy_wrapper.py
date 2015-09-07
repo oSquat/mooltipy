@@ -27,6 +27,7 @@ import sys
 
 from mooltipy.utilities import mpdata
 from mooltipy.utilities import mplogin
+from mooltipy.utilities import mpfavorites
 
 # Dictionary key:values == "utility name": module
 #   Used to print out usage and as a switch/case to branch on chosen
@@ -35,6 +36,7 @@ from mooltipy.utilities import mplogin
 utilities = {
     'data': mpdata,
     'login': mplogin,
+    'favorites': mpfavorites,
 }
 
 def main_options():
