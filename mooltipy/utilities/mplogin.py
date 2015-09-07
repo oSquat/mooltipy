@@ -22,6 +22,7 @@ import os
 import time
 import sys
 import getpass
+import logging
 
 from mooltipy.mooltipass_client import MooltipassClient
 
@@ -48,8 +49,6 @@ def main_options():
     # TODO: Necessary -q -v -f options? Maybe with read / delete.
     #parser.add_argument('-q','--quiet', action='store_true',
     #        help='suppress output and warnings)
-    #parser.add_argument('-v','--verbose', action='store_true',
-    #        help='turn on verbosity')
 
     # subparser
     subparsers = parser.add_subparsers(
@@ -145,10 +144,28 @@ def main_options():
 
     return args
 
+def get_all_contexts(mooltipass, args):
+    """Returns a list of all contexts for the authenticated user"""
+    contexts = mooltipass.read_all_nodes()
+    for ctx in contexts.keys():
+        print('Context {}'.format(ctx))
+        for login in contexts[ctx]:
+            print('  Login: {}'.format(login.login))
+        
 def get_context(mooltipass, args):
     """Request username & password for a given context."""
-    print('Not yet implemented.')
-    sys.exit(1)
+    print('Accept memory management mode to continue...')
+    mooltipass.start_memory_management()
+    
+    if args.context.lower() != 'all':
+        print('Not yet implemented.')
+        sys.exit(1)
+    else:
+        get_all_contexts(mooltipass, args)
+
+    print('Exiting memory management mode.')
+    mooltipass.end_memory_management()
+
 
 def generate_random_password(args):
     """Generate and return a random password."""

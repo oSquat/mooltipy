@@ -1,5 +1,6 @@
 # Commands
 # https://github.com/limpkin/mooltipass/tree/master/source_code/src/USB
+CMD_DEBUG               = 0xA0
 CMD_PING                = 0xA1
 CMD_VERSION             = 0xA2
 CMD_CONTEXT             = 0xA3
