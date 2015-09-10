@@ -96,6 +96,9 @@ def main_options():
     #parser.add_argument('-q','--quiet', action='store_true',
     #        help='suppress output and warnings)
 
+    parser.add_argument('-sme', '--skip_mgmt_enter', help='Skip entering management mode', action='store_true')
+    parser.add_argument('-smx', '--skip_mgmt_exit', help='Skip exiting management mode', action='store_true')
+
     # subparser
     subparsers = parser.add_subparsers(
             dest = 'command', help='action to take on context')
@@ -167,9 +170,11 @@ def main():
         time.sleep(1)
     quiet_bool = False
 
-    mooltipass.start_memory_management()
+    if args.skip_mgmt_enter == False:
+        mooltipass.start_memory_management()
     command_handlers[args.command](mooltipass, args)
-    mooltipass.end_memory_management()
+    if args.skip_mgmt_exit == False:
+        mooltipass.end_memory_management()
 
     sys.exit(0)
 
