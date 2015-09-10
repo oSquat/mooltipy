@@ -64,9 +64,21 @@ def main_options():
 
     # set
     # ---
+    description = 'Examples:\n' + \
+            '\t# Set a random passord for user_name at the example.com context' \
+            '\n\t$ {cmd_util} set login example.com -u user_name\n\n' \
+            '\t# Set an alphanumeric password for user_name at the exemple.com context' \
+            '\n\t$ {cmd_util} set login example.com -u user_name -c alnum\n\n' \
+            '\t# Set a password for user_name, but ask for it at runtime ' \
+            '\n\t$ {cmd_util} set login example.com -u user_name -p\n\n' \
+            '\t# Specify a password for user_name on the command line (bad idea)' \
+            '\n\t$ {cmd_util} set login example.com -u user_name -p "P@ssw0rd"'
+
     set_parser = subparsers.add_parser(
             'set',
             help = 'Set or update a context',
+            description = description,
+            formatter_class = argparse.RawDescriptionHelpFormatter,
             prog = cmd_util+' set')
     set_parser.add_argument('-u','--username',
             help = 'optional username for the context',
@@ -76,31 +88,31 @@ def main_options():
             '-p','--password',
             help = 'do not set this option to generate a random password ' + \
                    '(best method); set this option without specifying a ' + \
-                   'password to be promted at runtime (ok method); avoid ' + \
-                   'setting this option and specifying the password on the ' + \
-                   'command line (terrible option)',
+                   'password to be promted at runtime for the password (ok ' + \
+                   'method); set this option and specify a password at the ' + \
+                   'same time on the command line (terrble method unless ' + \
+                   'your scripting)',
             nargs = '?',
             default = None,             # Set if -p not present
             const = '',                 # Set if -p present with no argument
             action = 'store')
     set_parser.add_argument(
             '-l', '--length',
-            help = 'specify maximum password length; default is the ' + \
-                   'maximum of 31 characters minus appended character',
+            help = 'specify maximum password length if generating a random ' + \
+                   'password; default is the maximum of 31 characters ' + \
+                   'appended character',
             nargs = '?',
             type = int,
             default = 31,
-            action='store')
+            action = 'store')
     set_parser.add_argument(
-            '-i', '--invalid',
-            help = 'password characters that can not be used',
+            '-c', '--charset',
+            help = 'character set for use in random password generation ' + \
+                   'you can currently use {an|alnum|alphanumeric} to only ' + \
+                   'use alpha-numeric values',
             nargs='?',
-            default='',
+            default = None,
             action='store')
-    set_parser.add_argument(
-            '-an', '--anum',
-            help = 'Alphanumeric characters only [a-zA-Z0-9]',
-            action='store_true')
     set_parser.add_argument(
             '-au',
             help = 'Append to the Username a tab or crlf',
@@ -111,7 +123,7 @@ def main_options():
             help = 'Append to the Password a tab or crlf',
             action = 'store',
             choices = ['tab','crlf'])
-    set_parser.add_argument("context", help='specify context (e.g. Lycos.com)')
+    set_parser.add_argument("context", help='specify context (e.g. geociticies.com)')
 
     # delete
     # ------
@@ -127,6 +139,11 @@ def main_options():
 
     args = parser.parse_args()
 
+    if args.command == 'set':
+        if args.charset is not None and \
+                args.charset in ['an', 'alnum', 'alphanum', 'alphanumeric']:
+            args.charset = 'an'
+
     return args
 
 def get_all_contexts(mooltipass, args):
@@ -136,11 +153,11 @@ def get_all_contexts(mooltipass, args):
         print('Context {}'.format(ctx.service_name))
         for login in contexts[ctx]:
             print('  Login: {}'.format(login.login))
-        
+
 def get_context(mooltipass, args):
     """Request username & password for a given context."""
     mooltipass.start_memory_management()
-    
+
     if args.context.lower() != 'all':
         print('Not yet implemented.')
         sys.exit(1)
@@ -157,9 +174,7 @@ def generate_random_password(args):
     new_password = []
     while len(new_password) < args.length:
         char = chr((ord(os.urandom(1)) % (127 - 32)) + 32)
-        if args.anum and not char.isalnum():
-            continue
-        if char in args.invalid:
+        if args.charset and 'an' in args.charset and not char.isalnum():
             continue
         new_password += char
     return ''.join(new_password)
