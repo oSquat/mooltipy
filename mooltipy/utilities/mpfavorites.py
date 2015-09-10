@@ -21,6 +21,7 @@ import argparse
 import os
 import sys
 import logging
+import time
 
 from mooltipy.mooltipass_client import MooltipassClient
 
@@ -31,14 +32,18 @@ except NameError:
     pass
 
 def get_favorite(mooltipass, args):
-    """Gets the favorite in the specified slot."""
-    print("Not yet implemented.")
-    sys.exit(1)
+    """Gets the favorite information from the specified slot"""
+    fav_slot_info = mooltipass.get_favorite(args.favorite_slot)
+    if fav_slot_info[0] == 0:
+        print("No favorite stored in slot {}".format(args.favorite_slot))
+        return
+    context_info = mooltipass.read_node(fav_slot_info[0])
+    child_info = mooltipass.read_node(fav_slot_info[1])
+    print("Context: {}".format(context_info.service_name))
+    print("  Login: {}".format(child_info.login))
 
 def set_favorite(mooltipass, args):
     """Sets a context into a favorite slot"""
-    mooltipass.start_memory_management()
-
     all_contexts = mooltipass.read_all_nodes()
     ctx_favorite_list = []
     for ctx in all_contexts:
@@ -53,8 +58,8 @@ def set_favorite(mooltipass, args):
         selected_favorite = int(input("Please select a context:"))
 
     favorite_slot = 1000
-    while favorite_slot > 14:
-        favorite_slot = int(input("Please select a favorite slot:"))
+    while favorite_slot >= 14:
+        favorite_slot = int(input("Please select a favorite slot(0-13):"))
 
     print('Putting {}:{} in favorite slot {}'.format(ctx_favorite_list[selected_favorite][0].service_name, ctx_favorite_list[selected_favorite][1].login, favorite_slot))
     logging.debug('Parent Addr:0x{:x} Child Addr:0x{:x}'.format(ctx_favorite_list[selected_favorite][0].node_addr, ctx_favorite_list[selected_favorite][1].node_addr))
@@ -62,12 +67,10 @@ def set_favorite(mooltipass, args):
     mooltipass.set_favorite(favorite_slot,
                             (ctx_favorite_list[selected_favorite][0].node_addr,
                              ctx_favorite_list[selected_favorite][1].node_addr))
-    mooltipass.end_memory_management()
 
 def del_favorite(mooltipass, args):
     """Removes a favorite from the specified slot"""
-    print("Not yet implemented.")
-    sys.exit(1)
+    mooltipass.set_favorite(args.favorite_slot, (0, 0))
 
 def main_options():
     """Handles command-line interface, arguments & options. """
@@ -103,7 +106,7 @@ def main_options():
             'get',
             help = 'Get a favorite or favorites',
             prog = cmd_util+' get')
-    get_parser.add_argument("favorite_slot", help='specify context (e.g. Lycos.com)')
+    get_parser.add_argument("favorite_slot", type=int, help='specify context (e.g. Lycos.com)', choices=range(0,14))
 
     # set
     # ---
@@ -118,7 +121,8 @@ def main_options():
             'del',
             help='Delete a favorite',
             prog=cmd_util+' del')
-    del_parser.add_argument("favorite_slot", help='specify favorite slot (e.g. 1)')
+    del_parser.add_argument("favorite_slot", type=int, help='specify context (e.g. Lycos.com)', choices=range(0,14))
+
 
     if not len(sys.argv) > 1:
         parser.print_help()
@@ -163,7 +167,10 @@ def main():
         time.sleep(1)
     quiet_bool = False
 
+    mooltipass.start_memory_management()
     command_handlers[args.command](mooltipass, args)
+    mooltipass.end_memory_management()
+
     sys.exit(0)
 
 if __name__ == '__main__':

@@ -31,7 +31,8 @@ import usb.core
 from .constants import *
 from collections import defaultdict
 
-logging.basicConfig(level=logging.DEBUG)
+# Uncomment for lots of debugging
+#logging.basicConfig(level=logging.DEBUG)
 
 class _Mooltipass(object):
     """Mooltipass -- Outlines access to Mooltipass's USB commands.
@@ -131,7 +132,7 @@ class _Mooltipass(object):
         if data is not None:
             arraytosend.extend(data)
 
-        logging.debug('{}'.format(arraytosend))
+        logging.debug('TX Packet: \n{}'.format(arraytosend))
 
         self._epout.write(arraytosend)
 
@@ -689,14 +690,17 @@ class _Mooltipass(object):
         parent_address = self.get_starting_parent_address()
         while True:
             parent_node = self.read_node(parent_address)
+            logging.debug(parent_node)
             if parent_node.next_child_addr == 0:
                 logging.info("Skipping {} with no children"\
                              .format(parent_node.service_name))
             else:
                 child_node = self.read_node(parent_node.next_child_addr)
                 node_list[parent_node].append(child_node)
+                logging.debug(child_node)
                 while child_node.next_child_addr != 0:
                     child_node = self.read_node(child_node.next_child_addr)
+                    logging.debug(child_node)
                     node_list[parent_node].append(child_node)
             parent_address = parent_node.next_parent_addr
             if parent_address == 0:
@@ -715,7 +719,7 @@ class _Mooltipass(object):
         logging.info('Not yet implemented')
         pass
 
-    def _get_favorite(self, slot_id):
+    def get_favorite(self, slot_id):
         """Get favorite for current user by slot ID. (0xC7)
 
         Arguments:
@@ -724,8 +728,9 @@ class _Mooltipass(object):
         Return None on error or parent_addr, child_addr tuple (each
         address is 2 bytes).
         """
-        logging.info('Not yet implemented')
-        pass
+        self.send_packet(CMD_GET_FAVORITE, array('B', [slot_id]))
+        packet = self.recv_packet()[self._DATA_INDEX:]
+        return struct.unpack('<HH', packet[0:4])
 
     def set_favorite(self, slot_id, addr_tuple):
         """Set a favorite. (0xC8)
@@ -738,11 +743,11 @@ class _Mooltipass(object):
         """
         logging.debug('Slot:{} Parent:0x{:x}{:x} Child:0x{:x}{:x}'.format(
                       slot_id,
-                      (addr_tuple[0]&0xFF00)>>8, addr_tuple[0]&0xFF,
-                      (addr_tuple[1]&0xFF00)>>8, addr_tuple[1]&0xFF))
+                      addr_tuple[0]&0xFF, (addr_tuple[0]&0xFF00)>>8,
+                      addr_tuple[1]&0xFF, (addr_tuple[1]&0xFF00)>>8))
         self.send_packet(CMD_SET_FAVORITE,
-                         array('B', [slot_id, (addr_tuple[0]&0xFF00) >> 8, addr_tuple[0]&0xFF, (addr_tuple[1]&0xFF00) >> 8, addr_tuple[1]&0xFF]))
-        return self.recv_packet()[self._DATA_INDEX]
+                         array('B', [slot_id, addr_tuple[0]&0xFF, (addr_tuple[0]&0xFF00)>>8, addr_tuple[1]&0xFF, (addr_tuple[1]&0xFF00)>>8]))
+        return self.recv_packet()[self._DATA_INDEX:]
 
     def get_starting_parent_address(self):
         """Get the address of starting parent? (0xC9)
