@@ -85,6 +85,16 @@ class MooltipassClient(_Mooltipass):
         resp = {0:False, 1:True, 3:None}
         return resp[super(MooltipassClient, self).set_context(context)]
 
+    def set_password(self, password):
+        """Set password for current context and login.
+
+        Return 1 or 0 indicating success or failure.
+        """
+        if super(MooltipassClient, self).check_password(password):
+            return 0
+        else:
+            return super(MooltipassClient, self).set_password(password)
+
     def start_memory_management(self, timeout=20000):
         """Enter memory management mode.
 

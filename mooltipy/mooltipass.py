@@ -234,15 +234,29 @@ class _Mooltipass(object):
         self.send_packet(CMD_CONTEXT, array('B', context + b'\x00'))
         return self.recv_packet(10000)[self._DATA_INDEX]
 
-    def _get_login(self):
-        """Get the login for current context. (0xA4)"""
-        logging.info('Not yet implemented')
-        pass
+    def get_login(self):
+        """Get the login for current context. (0xA4)
 
-    def _get_password(self):
-        """Get the password for current context. (0xA5)"""
-        logging.info('Not yet implemented')
-        pass
+        Returns the login as a string or 0 on failure.
+        """
+        self.send_packet(CMD_GET_LOGIN, None)
+        recv = self.recv_packet()[self._DATA_INDEX:]
+        if recv[0] == 0x00:
+            return 0
+        else:
+            return struct.unpack('<{}s'.format(len(recv)), recv)[0].strip('\0')
+
+    def get_password(self):
+        """Get the password for current context. (0xA5)
+
+        Returns the password as a string or 0 on failure.
+        """
+        self.send_packet(CMD_GET_PASSWORD, None)
+        recv = self.recv_packet()[self._DATA_INDEX:]
+        if recv[0] == 0x00:
+            return 0
+        else:
+            return struct.unpack('<{}s'.format(len(recv)), recv)[0].strip('\0')
 
     def set_login(self, login):
         """Set a login. (0xA6)
@@ -265,9 +279,14 @@ class _Mooltipass(object):
 
         Call check_password() to avoid calling set_password() and
         prompting the user to overwrite a value that already exists.
+
+        Returns 1 or 0 indicating success or failure.
         """
-        logging.info('Not yet implemented')
-        pass
+        self.send_packet(CMD_CHECK_PASSWORD, array('B', password + b'\x00'))
+        recv = None
+        while recv is None or recv == 0x02:
+            recv = self.recv_packet()[self._DATA_INDEX]
+        return recv
 
     def add_context(self, context):
         """Add a context. (0xA9)
@@ -299,11 +318,10 @@ class _Mooltipass(object):
         """Enter memory management mode. (0xAD)
 
         Keyword argument:
-            timeout -- how long to wait for user to complete entering pin 
+            timeout -- how long to wait for user to complete entering pin
                     (default 20000).
 
-            Note: Mooltipass times out after ~17.5 seconds of inaction
-                    inaction.
+            Note: Mooltipass times out after ~17.5 seconds of inaction.
         """
         self.send_packet(CMD_START_MEMORYMGMT, None)
         return self.recv_packet(timeout)
