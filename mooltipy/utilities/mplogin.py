@@ -104,13 +104,14 @@ def main_options():
             nargs = '?',
             type = int,
             default = 31,
-            action='store')
+            action = 'store')
     set_parser.add_argument(
             '-c', '--charset',
             help = 'character set for use in random password generation ' + \
                    'you can currently use {an|alnum|alphanumeric} to only ' + \
                    'use alpha-numeric values',
             nargs='?',
+            default = None,
             action='store')
     set_parser.add_argument(
             '-au',
@@ -138,9 +139,10 @@ def main_options():
 
     args = parser.parse_args()
 
-    if args.charset is not None and \
-            args.charset in ['an', 'alnum', 'alphanum', 'alphanumeric']:
-        args.charset = 'an'
+    if args.command == 'set':
+        if args.charset is not None and \
+                args.charset in ['an', 'alnum', 'alphanum', 'alphanumeric']:
+            args.charset = 'an'
 
     return args
 
@@ -151,12 +153,12 @@ def get_all_contexts(mooltipass, args):
         print('Context {}'.format(ctx))
         for login in contexts[ctx]:
             print('  Login: {}'.format(login.login))
-        
+
 def get_context(mooltipass, args):
     """Request username & password for a given context."""
     print('Accept memory management mode to continue...')
     mooltipass.start_memory_management()
-    
+
     if args.context.lower() != 'all':
         print('Not yet implemented.')
         sys.exit(1)
