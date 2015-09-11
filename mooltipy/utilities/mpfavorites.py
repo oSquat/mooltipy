@@ -31,8 +31,28 @@ except NameError:
     # For python 2/3 compatibility
     pass
 
+def get_all_favorites(mooltipass, args):
+    favorites = []
+    for slot in range(0, 14):
+        fav_slot_info = mooltipass.get_favorite(slot)
+        if fav_slot_info[0] != 0:
+            favorites.append((slot, fav_slot_info))
+    if not len(favorites):
+        print("No favorites configured!")
+    else:
+        for favorite in favorites:
+            context_info = mooltipass.read_node(favorite[1][0])
+            child_info = mooltipass.read_node(favorite[1][1])
+            print("Favorite Slot {} - {}:{}".format(favorite[0],
+                                                    context_info.service_name,
+                                                    child_info.login))
+
 def get_favorite(mooltipass, args):
     """Gets the favorite information from the specified slot"""
+    if args.favorite_slot == 'all':
+        get_all_favorites(mooltipass, args)
+        return
+    args.favorite_slot = int(args.favorite_slot)
     fav_slot_info = mooltipass.get_favorite(args.favorite_slot)
     if fav_slot_info[0] == 0:
         print("No favorite stored in slot {}".format(args.favorite_slot))
@@ -109,7 +129,9 @@ def main_options():
             'get',
             help = 'Get a favorite or favorites',
             prog = cmd_util+' get')
-    get_parser.add_argument("favorite_slot", type=int, help='specify context (e.g. Lycos.com)', choices=range(0,14))
+    valid_slots = [str(num) for num in range(0, 14)]
+    valid_slots.append('all')
+    get_parser.add_argument("favorite_slot", help='specify context (e.g. Lycos.com)', choices=valid_slots, type=str)
 
     # set
     # ---
