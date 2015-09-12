@@ -20,6 +20,8 @@ import logging
 
 from .mooltipass import _Mooltipass
 
+# Delete me after removing read_all_nodes
+from collections import defaultdict
 
 class MooltipassClient(_Mooltipass):
     """Inherits _Mooltipass() and extends raw USB/firmware calls.
@@ -144,62 +146,109 @@ class MooltipassClient(_Mooltipass):
         #   length of data received is shorter than expected?
         return data[4:lod+4]
 
-
-    def parent_nodes(self):
-        return _ParentNodes(self)
-
-    class ParentNode(object):
-        """Represent node."""
-        def __init__(
-                self,
-                node_addr,
+    def read_node(self, node_number):
+        recv = super(MooltipassClient, self).read_node(node_number)
+        # Use flags to figure out the node type
+        flags = struct.unpack('<H', recv[0:2])[0]
+        if flags & 0xC000 == 0x00:
+            # This is a parent node
+            prev_parent_addr, next_parent_addr, next_child_addr = \
+                struct.unpack('<HHH', recv[2:8])
+            recv = recv[8:66]
+            service_name = struct.unpack('<{}s'.format(len(recv)), recv)[0].strip('\0')
+            return ParentNode(
+                node_number,
                 flags,
                 prev_parent_addr,
                 next_parent_addr,
                 next_child_addr,
-                service_name):
+                service_name)
 
-            self.node_addr = node_addr
-            self.prev_parent_addr = prev_parent_addr
-            self.next_parent_addr = next_parent_addr
-            self.next_child_addr = next_child_addr
-            self.service_name = service_name
+        elif flags & 0xC000 == 0x4000:
+            # This is a credential child node
+            prev_child_addr, next_child_addr, descr, date_created, date_last_used, ctr1, ctr2, ctr3, login, password = struct.unpack("<HH24sHH3b63s32s", recv[2:132])
+            ctr = (ctr1 << 16) + (ctr2 << 8) + ctr3
+            return ChildNode(node_number, flags, prev_child_addr, next_child_addr, descr[0], date_created, date_last_used, ctr, login, password)
+        elif flags & 0xC000 == 0x8000:
+            # This is the start of a data sequence
+            print("Data nodes are not yet supported!")
+        else:
+            print("Unknown node type received!")
 
-        def __str__(self):
-            return "<{}: Address:0x{:x}, PrevParent:0x{:x}, NextParent:0x{:x}, NextChild:0x{:x}, ServiceName:{}>".format(self.__class__.__name__, self.node_addr, self.prev_parent_addr, self.next_parent_addr, self.next_child_addr, self.service_name)
+    def read_all_nodes(self):
+        node_list = defaultdict(list)
+        parent_address = self.get_starting_parent_address()
+        while True:
+            parent_node = self.read_node(parent_address)
+            if parent_node.next_child_addr == 0:
+                logging.info("Skipping {} with no children"\
+                             .format(parent_node.service_name))
+            else:
+                child_node = self.read_node(parent_node.next_child_addr)
+                node_list[parent_node.service_name].append(child_node)
+                while child_node.next_child_addr != 0:
+                    child_node = self.read_node(child_node.next_child_addr)
+                    node_list[parent_node.service_name].append(child_node)
+            parent_address = parent_node.next_parent_addr
+            if parent_address == 0:
+                break
+        return node_list
 
-        def __repr__(self):
-            return str(self)
+    def parent_nodes(self):
+        return _ParentNodes(self)
 
-    class ChildNode(object):
-        def __init__(
-                self,
-                node_addr,
-                flags,
-                prev_child_addr,
-                next_child_addr,
-                description,
-                date_created,
-                date_last_used,
-                ctr,
-                login,
-                password):
-            self.node_addr = node_addr
-            self.flags = flags
-            self.prev_child_addr = prev_child_addr
-            self.next_child_addr = next_child_addr
-            self.description = description
-            self.date_created = date_created
-            self.date_last_used = date_last_used
-            self.ctr = ctr
-            self.login = login
-            self.password = password
+class ParentNode(object):
+    """Represent node."""
+    def __init__(
+            self,
+            node_addr,
+            flags,
+            prev_parent_addr,
+            next_parent_addr,
+            next_child_addr,
+            service_name):
 
-        def __str__(self):
-            return "<{}: Address:0x{:x} PrevChild:0x{:x} NextChild:0x{:x} Login:{}>".format(self.__class__.__name__, self.node_addr, self.prev_child_addr, self.next_child_addr, self.login)
+        self.node_addr = node_addr
+        self.prev_parent_addr = prev_parent_addr
+        self.next_parent_addr = next_parent_addr
+        self.next_child_addr = next_child_addr
+        self.service_name = service_name
 
-        def __repr__(self):
-            return str(self)
+    def __str__(self):
+        return "<{}: Address:0x{:x}, PrevParent:0x{:x}, NextParent:0x{:x}, NextChild:0x{:x}, ServiceName:{}>".format(self.__class__.__name__, self.node_addr, self.prev_parent_addr, self.next_parent_addr, self.next_child_addr, self.service_name)
+
+    def __repr__(self):
+        return str(self)
+
+class ChildNode(object):
+    def __init__(
+            self,
+            node_addr,
+            flags,
+            prev_child_addr,
+            next_child_addr,
+            description,
+            date_created,
+            date_last_used,
+            ctr,
+            login,
+            password):
+        self.node_addr = node_addr
+        self.flags = flags
+        self.prev_child_addr = prev_child_addr
+        self.next_child_addr = next_child_addr
+        self.description = description
+        self.date_created = date_created
+        self.date_last_used = date_last_used
+        self.ctr = ctr
+        self.login = login
+        self.password = password
+
+    def __str__(self):
+        return "<{}: Address:0x{:x} PrevChild:0x{:x} NextChild:0x{:x} Login:{}>".format(self.__class__.__name__, self.node_addr, self.prev_child_addr, self.next_child_addr, self.login)
+
+    def __repr__(self):
+        return str(self)
 
 class _ParentNodes(object):
     """Parent node iterator.
