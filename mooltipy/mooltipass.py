@@ -577,60 +577,6 @@ class _Mooltipass(object):
 
     # 0xC4 is reserved for response from Mooltipass.
 
-    class ParentNode(object):
-        """Represent node."""
-        def __init__(
-                self,
-                node_addr,
-                flags,
-                prev_parent_addr,
-                next_parent_addr,
-                next_child_addr,
-                service_name):
-
-            self.node_addr = node_addr
-            self.prev_parent_addr = prev_parent_addr
-            self.next_parent_addr = next_parent_addr
-            self.next_child_addr = next_child_addr
-            self.service_name = service_name
-        
-        def __str__(self):
-            return "<{}: Address:0x{:x}, PrevParent:0x{:x}, NextParent:0x{:x}, NextChild:0x{:x}, ServiceName:{}>".format(self.__class__.__name__, self.node_addr, self.prev_parent_addr, self.next_parent_addr, self.next_child_addr, self.service_name)
-
-        def __repr__(self):
-            return str(self)
-
-    class ChildNode(object):
-        def __init__(
-                self,
-                node_addr,
-                flags,
-                prev_child_addr,
-                next_child_addr,
-                description,
-                date_created,
-                date_last_used,
-                ctr,
-                login,
-                password):
-            self.node_addr = node_addr
-            self.flags = flags
-            self.prev_child_addr = prev_child_addr
-            self.next_child_addr = next_child_addr
-            self.description = description
-            self.date_created = date_created
-            self.date_last_used = date_last_used
-            self.ctr = ctr
-            self.login = login
-            self.password = password
-        
-        def __str__(self):
-            return "<{}: Address:0x{:x} PrevChild:0x{:x} NextChild:0x{:x} Login:{}>".format(self.__class__.__name__, self.node_addr, self.prev_child_addr, self.next_child_addr, self.login)
-
-        def __repr__(self):
-            return str(self)
-
-
     def read_node(self, node_number):
         """Read a node in flash. (0xC5)
 

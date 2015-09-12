@@ -163,6 +163,9 @@ def get_context(mooltipass, args):
         print('Not yet implemented.')
         sys.exit(1)
     else:
+        for pnode in mooltipass.parent_nodes():
+            print(pnode.service_name)
+            # TODO: print('  Login: ' + pnode.
         get_all_contexts(mooltipass, args)
 
     print('Exiting memory management mode.')
