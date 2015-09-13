@@ -557,8 +557,6 @@ class _Mooltipass(object):
 
         return data
 
-    # TODO: Add lots of commands...
-
     def _get_current_card_cpz(self):
         """Return CPZ of currently inserted card.
 

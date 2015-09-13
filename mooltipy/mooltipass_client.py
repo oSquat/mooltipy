@@ -148,6 +148,7 @@ class MooltipassClient(_Mooltipass):
         return data[4:lod+4]
 
     def read_node(self, node_number):
+        """Extend mooltipass to unpack return and create object."""
         recv = super(MooltipassClient, self).read_node(node_number)
         # Use flags to figure out the node type
         flags = struct.unpack('<H', recv[0:2])[0]
@@ -156,7 +157,8 @@ class MooltipassClient(_Mooltipass):
             prev_parent_addr, next_parent_addr, next_child_addr = \
                 struct.unpack('<HHH', recv[2:8])
             recv = recv[8:66]
-            service_name = struct.unpack('<{}s'.format(len(recv)), recv)[0].strip('\0')
+            service_name = struct.unpack('<{}s'.format(
+                    len(recv)), recv)[0].strip('\0')
             return ParentNode(
                     node_number,
                     flags,
@@ -168,18 +170,21 @@ class MooltipassClient(_Mooltipass):
 
         elif flags & 0xC000 == 0x4000:
             # This is a credential child node
-            prev_child_addr, next_child_addr, descr, date_created, date_last_used, ctr1, ctr2, ctr3, login, password = struct.unpack("<HH24sHH3b63s32s", recv[2:132])
+            prev_child_addr, next_child_addr, \
+            descr, date_created, date_last_used, \
+            ctr1, ctr2, ctr3, login, password = \
+                    struct.unpack("<HH24sHH3b63s32s", recv[2:132])
             ctr = (ctr1 << 16) + (ctr2 << 8) + ctr3
-            return ChildNode(node_number, 
-                    flags, 
-                    prev_child_addr, 
-                    next_child_addr, 
-                    descr[0], 
-                    date_created, 
-                    date_last_used, 
-                    ctr, 
-                    login, 
-                    password, 
+            return ChildNode(node_number,
+                    flags,
+                    prev_child_addr,
+                    next_child_addr,
+                    descr[0],
+                    date_created,
+                    date_last_used,
+                    ctr,
+                    login,
+                    password,
                     self)
         elif flags & 0xC000 == 0x8000:
             # This is the start of a data sequence
@@ -187,33 +192,14 @@ class MooltipassClient(_Mooltipass):
         else:
             print("Unknown node type received!")
 
-    def read_all_nodes(self):
-        # TODO: Delete me
-        node_list = defaultdict(list)
-        parent_address = self.get_starting_parent_address()
-        while True:
-            parent_node = self.read_node(parent_address)
-            if parent_node.next_child_addr == 0:
-                logging.info("Skipping {} with no children"\
-                             .format(parent_node.service_name))
-            else:
-                child_node = self.read_node(parent_node.next_child_addr)
-                node_list[parent_node.service_name].append(child_node)
-                while child_node.next_child_addr != 0:
-                    child_node = self.read_node(child_node.next_child_addr)
-                    node_list[parent_node.service_name].append(child_node)
-            parent_address = parent_node.next_parent_addr
-            if parent_address == 0:
-                break
-        return node_list
-
     def parent_nodes(self):
+        """Return a ParentNodes iter."""
         # TODO: Comment and make a property too?
         return _ParentNodes(self)
 
 
 class ParentNode(object):
-    """Represent node."""
+    """Represent a parent node."""
     def __init__(
             self,
             node_addr,
@@ -239,10 +225,12 @@ class ParentNode(object):
         return str(self)
 
     def child_nodes(self):
-        # TODO: Comment and make a property too?
+        """Return a child node iter."""
         return _ChildNodes(self)
 
+
 class ChildNode(object):
+    """Represent a child node."""
     def __init__(
             self,
             node_addr,
@@ -275,6 +263,7 @@ class ChildNode(object):
     def __repr__(self):
         return str(self)
 
+
 class _ParentNodes(object):
     """Parent node iterator.
 
@@ -304,6 +293,7 @@ class _ParentNodes(object):
         self.current_node = self._parent.read_node(self.next_parent_addr)
         self.next_parent_addr = self.current_node.next_parent_addr
         return self.current_node
+
 
 class _ChildNodes(object):
     """Child node iterator.
