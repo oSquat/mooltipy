@@ -135,12 +135,12 @@ class _Mooltipass(object):
 
         self._epout.write(arraytosend)
 
-    def recv_packet(self, timeout=5000):
+    def recv_packet(self, timeout=17500):
         """Receives a packet from the mooltipass.
 
         Keyword arguments:
             timeout -- how long to wait for user to complete entering pin
-                    (default 5000 is sane for most requests?).
+                    (default 17500 coincides with Mootipass GUI timeout)
         """
         recv = None
         while True:

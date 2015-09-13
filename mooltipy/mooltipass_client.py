@@ -42,8 +42,9 @@ class MooltipassClient(_Mooltipass):
         version_info = self.get_version()
         self.flash_size = version_info[2]
         self.version = version_info[3:].tostring()
-        print('Connected to Mooltipass {} w/ {} Mb Flash'.format(self.version,
-              self.flash_size))
+        logging.debug('Connected to Mooltipass {} w/ {} Mb Flash'.format(
+                self.version,
+                self.flash_size))
 
     @property
     def status(self):
