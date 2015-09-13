@@ -59,7 +59,7 @@ def main():
 
     logging.basicConfig(
             format='%(levelname)s\t %(funcName)s():\t %(message)s',
-            level=logging.DEBUG)
+            level=logging.INFO)
 
     (options, args) = main_options()
 

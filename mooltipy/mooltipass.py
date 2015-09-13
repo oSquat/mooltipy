@@ -523,7 +523,8 @@ class _Mooltipass(object):
                 packet.append(eod)
                 packet.extend(data[i:i+BLOCK_SIZE])
                 self.send_packet(CMD_WRITE_32B_IN_DN, packet)
-                logging.debug('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
+                # TODO: Make debug info and report progress elsehow
+                logging.info('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
                 if eod == 0 and not self.recv_packet()[self._DATA_INDEX]:
                     raise RuntimeError('Unexpected return')
 
@@ -551,7 +552,8 @@ class _Mooltipass(object):
             if recv[0] == 0x01:
                 break
             data.extend(recv[self._DATA_INDEX:32+self._DATA_INDEX])
-            logging.debug('Received {0} bytes...'.format(str(len(data))))
+            # TODO: Make debug info and report progress elsehow
+            logging.info('Received {0} bytes...'.format(str(len(data))))
 
         return data
 
