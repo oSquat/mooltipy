@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'mooltipy',
-    version = '0.3.1',
+    version = '0.4.0',
     description = 'Mooltipass command line utilities and development library.',
     url = 'https://github.com/osquat/mooltipy',
     author = 'Vic Simeone',
@@ -16,7 +16,7 @@ setup(
             'Programming Language :: Python :: 3',
             'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
             'Operating System :: POSIX :: Linux',
-            'Development Status :: 3 - Alpha',
+            'Development Status :: 4 - Beta',
             'Intended Audience :: Developers',
             'Intended Audience :: End Users/Desktop',
     ],
@@ -27,6 +27,7 @@ setup(
             'mooltipy = mooltipy.utilities.mooltipy_wrapper:main',
             'mpdata = mooltipy.utilities.mpdata:main',
             'mplogin = mooltipy.utilities.mplogin:main',
+            'mpfavorites = mooltipy.utilities.mpfavorites:main',
         ],
     }
 )
