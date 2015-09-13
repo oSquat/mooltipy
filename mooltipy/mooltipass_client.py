@@ -200,6 +200,9 @@ class MooltipassClient(_Mooltipass):
 
 class ParentNode(object):
     """Represent a parent node."""
+
+    service_name = str()
+
     def __init__(
             self,
             node_addr,
@@ -214,7 +217,10 @@ class ParentNode(object):
         self.prev_parent_addr = prev_parent_addr
         self.next_parent_addr = next_parent_addr
         self.next_child_addr = next_child_addr
-        self.service_name = service_name
+        for c in service_name:
+            if c == '\00':
+                break
+            self.service_name += c
         self._parent_ref = weakref.ref(parent)
         self._parent = self._parent_ref()
 
