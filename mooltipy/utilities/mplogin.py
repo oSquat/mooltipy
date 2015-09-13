@@ -162,8 +162,22 @@ def main_options():
     return args
 
 def get_context(mooltipass, args):
-    """Rquest username & password for a given context."""
-    print('Not yet implemented.')
+    """Get a password for a given context."""
+    set_context = mooltipass.set_context(args.context)
+    if set_context == False:
+        print('Context unknown. Use list action to see available contexts')
+        sys.exit(1)
+    if set_context is None:
+        print('Log into the mooltipass and try again.')
+        sys.exit(1)
+
+    # Try to get password; 0 means there are multiple logins for this context
+    password = mooltipass.get_password()
+    if password == 0:
+        mooltipass.get_login()
+
+    password = mooltipass.get_password()
+    print(password)
 
 def list_context(mooltipass, args):
     """List login contexts"""
@@ -249,6 +263,11 @@ def del_context(mooltipass, args):
     sys.exit(1)
 
 def main():
+
+    logging.basicConfig(
+            #format='%(levelname)s\t %(funcName)s():\t %(message)s',
+            format='%(message)s',
+            level=logging.INFO)
 
     command_handlers = {
         'get':get_context,
