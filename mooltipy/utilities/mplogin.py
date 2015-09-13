@@ -41,7 +41,7 @@ def main_options():
 
     description = '{cmd_util} manages Mooltipass login contexts.'.format(
             cmd_util = cmd_util)
-    usage = '{cmd_util} [-h] ... {{get,set,del}} context'.format(
+    usage = '{cmd_util} [-h] ... {{get,set,del,list}} context'.format(
             cmd_util = cmd_util)
 
     # main
@@ -137,6 +137,20 @@ def main_options():
         parser.print_help()
         sys.exit(0)
 
+    # list
+    # ----
+    list_parser = subparsers.add_parser(
+            'list',
+            help='List login contexts',
+            prog=cmd_util + ' list')
+    list_parser.add_argument(
+            'context',
+            action='store',
+            default='*',
+            nargs='?',
+            help='context(s) to list; supports unix-style wildcards')
+
+    # end subparsers
     args = parser.parse_args()
 
     if args.command == 'set':
@@ -147,10 +161,16 @@ def main_options():
     return args
 
 def get_context(mooltipass, args):
-    """Request username & password for a given context."""
+    """Rquest username & password for a given context."""
+    print('Not yet implemented.')
+
+def list_context(mooltipass, args):
+    """List login contexts"""
+    # TODO: Incorporate fnmatch library on output to support 'globbing'
     mooltipass.start_memory_management()
 
-    if args.context.lower() != 'all':
+    print(args.context)
+    if args.context[0].lower() != '*':
         print('Not yet implemented.')
         sys.exit(1)
     else:
@@ -233,7 +253,8 @@ def main():
     command_handlers = {
         'get':get_context,
         'set':set_context,
-        'del':del_context
+        'del':del_context,
+        'list':list_context
     }
 
     args = main_options()
