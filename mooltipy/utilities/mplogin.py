@@ -148,7 +148,6 @@ def main_options():
 
 def get_context(mooltipass, args):
     """Request username & password for a given context."""
-    print('Accept memory management mode to continue...')
     mooltipass.start_memory_management()
 
     if args.context.lower() != 'all':
@@ -160,7 +159,6 @@ def get_context(mooltipass, args):
             for cnode in pnode.child_nodes():
                 print('  Login: ' + cnode.login)
 
-    print('Exiting memory management mode.')
     mooltipass.end_memory_management()
 
 def generate_random_password(args):
