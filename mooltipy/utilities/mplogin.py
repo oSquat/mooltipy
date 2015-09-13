@@ -18,11 +18,12 @@
 """Manage contexts containing usernames & passwords."""
 
 import argparse
-import os
-import time
-import sys
+import fnmatch
 import getpass
 import logging
+import os
+import sys
+import time
 
 from mooltipy.mooltipass_client import MooltipassClient
 
@@ -148,7 +149,7 @@ def main_options():
             action='store',
             default='*',
             nargs='?',
-            help='context(s) to list; supports unix-style wildcards')
+            help='supports shell-style wildcards; default is "*"')
 
     # end subparsers
     args = parser.parse_args()
@@ -166,19 +167,18 @@ def get_context(mooltipass, args):
 
 def list_context(mooltipass, args):
     """List login contexts"""
-    # TODO: Incorporate fnmatch library on output to support 'globbing'
     mooltipass.start_memory_management()
 
-    print(args.context)
-    if args.context[0].lower() != '*':
-        print('Not yet implemented.')
-        sys.exit(1)
-    else:
-        for pnode in mooltipass.parent_nodes():
-            print(pnode.service_name)
+    s = '{:<40}{:<40}\n'.format('Context:','Login(s):')
+    s += '{:<40}{:<40}\n'.format('--------','---------')
+    for pnode in mooltipass.parent_nodes():
+        if fnmatch.fnmatch(pnode.service_name, args.context):
+            service_name = pnode.service_name
             for cnode in pnode.child_nodes():
-                print('  Login: ' + cnode.login)
+                s += '{:<40}{:<40}\n'.format(service_name, cnode.login)
+                service_name = ''
 
+    print(s)
     mooltipass.end_memory_management()
 
 def generate_random_password(args):
