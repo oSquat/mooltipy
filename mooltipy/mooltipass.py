@@ -29,7 +29,6 @@ import time
 import usb.core
 
 from .constants import *
-from collections import defaultdict
 
 logging.basicConfig(level=logging.INFO)
 

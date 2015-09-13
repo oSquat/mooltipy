@@ -17,6 +17,7 @@ from array import array
 import random
 import struct
 import logging
+import weakref
 
 from .mooltipass import _Mooltipass
 
@@ -157,18 +158,29 @@ class MooltipassClient(_Mooltipass):
             recv = recv[8:66]
             service_name = struct.unpack('<{}s'.format(len(recv)), recv)[0].strip('\0')
             return ParentNode(
-                node_number,
-                flags,
-                prev_parent_addr,
-                next_parent_addr,
-                next_child_addr,
-                service_name)
+                    node_number,
+                    flags,
+                    prev_parent_addr,
+                    next_parent_addr,
+                    next_child_addr,
+                    service_name,
+                    self)
 
         elif flags & 0xC000 == 0x4000:
             # This is a credential child node
             prev_child_addr, next_child_addr, descr, date_created, date_last_used, ctr1, ctr2, ctr3, login, password = struct.unpack("<HH24sHH3b63s32s", recv[2:132])
             ctr = (ctr1 << 16) + (ctr2 << 8) + ctr3
-            return ChildNode(node_number, flags, prev_child_addr, next_child_addr, descr[0], date_created, date_last_used, ctr, login, password)
+            return ChildNode(node_number, 
+                    flags, 
+                    prev_child_addr, 
+                    next_child_addr, 
+                    descr[0], 
+                    date_created, 
+                    date_last_used, 
+                    ctr, 
+                    login, 
+                    password, 
+                    self)
         elif flags & 0xC000 == 0x8000:
             # This is the start of a data sequence
             print("Data nodes are not yet supported!")
@@ -176,6 +188,7 @@ class MooltipassClient(_Mooltipass):
             print("Unknown node type received!")
 
     def read_all_nodes(self):
+        # TODO: Delete me
         node_list = defaultdict(list)
         parent_address = self.get_starting_parent_address()
         while True:
@@ -195,7 +208,9 @@ class MooltipassClient(_Mooltipass):
         return node_list
 
     def parent_nodes(self):
+        # TODO: Comment and make a property too?
         return _ParentNodes(self)
+
 
 class ParentNode(object):
     """Represent node."""
@@ -206,19 +221,26 @@ class ParentNode(object):
             prev_parent_addr,
             next_parent_addr,
             next_child_addr,
-            service_name):
+            service_name,
+            parent = None):
 
         self.node_addr = node_addr
         self.prev_parent_addr = prev_parent_addr
         self.next_parent_addr = next_parent_addr
         self.next_child_addr = next_child_addr
         self.service_name = service_name
+        self._parent_ref = weakref.ref(parent)
+        self._parent = self._parent_ref()
 
     def __str__(self):
         return "<{}: Address:0x{:x}, PrevParent:0x{:x}, NextParent:0x{:x}, NextChild:0x{:x}, ServiceName:{}>".format(self.__class__.__name__, self.node_addr, self.prev_parent_addr, self.next_parent_addr, self.next_child_addr, self.service_name)
 
     def __repr__(self):
         return str(self)
+
+    def child_nodes(self):
+        # TODO: Comment and make a property too?
+        return _ChildNodes(self)
 
 class ChildNode(object):
     def __init__(
@@ -232,7 +254,8 @@ class ChildNode(object):
             date_last_used,
             ctr,
             login,
-            password):
+            password,
+            parent):
         self.node_addr = node_addr
         self.flags = flags
         self.prev_child_addr = prev_child_addr
@@ -243,6 +266,8 @@ class ChildNode(object):
         self.ctr = ctr
         self.login = login
         self.password = password
+        self._parent_ref = weakref.ref(parent)
+        self._parent = self._parent_ref()
 
     def __str__(self):
         return "<{}: Address:0x{:x} PrevChild:0x{:x} NextChild:0x{:x} Login:{}>".format(self.__class__.__name__, self.node_addr, self.prev_child_addr, self.next_child_addr, self.login)
@@ -254,15 +279,16 @@ class _ParentNodes(object):
     """Parent node iterator.
 
     Intended to be returned to the user by way of method from
-    MooltipassClient.
+    MooltipassClient: MooltipassClient.parent_nodes()
     """
 
     current_node = None
     next_parent_addr = None
 
-    def __init__(self, parent_object):
-        self._pobj = parent_object
-        self.next_parent_addr = self._pobj.get_starting_parent_address()
+    def __init__(self, parent):
+        self._parent_ref = weakref.ref(parent)
+        self._parent = self._parent_ref()
+        self.next_parent_addr = self._parent.get_starting_parent_address()
 
     def __iter__(self):
         return self
@@ -275,10 +301,36 @@ class _ParentNodes(object):
         if self.next_parent_addr == 0:
             raise StopIteration()
 
-        self.current_node = self._pobj.read_node(self.next_parent_addr)
+        self.current_node = self._parent.read_node(self.next_parent_addr)
         self.next_parent_addr = self.current_node.next_parent_addr
         return self.current_node
 
-
 class _ChildNodes(object):
-    pass
+    """Child node iterator.
+
+    Intended to be returned to the user by way of method from
+    the ParentNode class: pnode.child_nodes().
+    """
+
+    current_node = None
+    next_child_addr = None
+
+    def __init__(self, parent):
+        self._parent_ref = weakref.ref(parent)
+        self._parent = self._parent_ref()
+        self.next_child_addr = self._parent.next_child_addr
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        #Python 2 compatibility
+        return self.__next__()
+
+    def __next__(self):
+        if self.next_child_addr == 0:
+            raise StopIteration()
+
+        self.current_node = self._parent._parent.read_node(self.next_child_addr)
+        self.next_child_addr = self.current_node.next_child_addr
+        return self.current_node

@@ -146,14 +146,6 @@ def main_options():
 
     return args
 
-def get_all_contexts(mooltipass, args):
-    """Returns a list of all contexts for the authenticated user"""
-    contexts = mooltipass.read_all_nodes()
-    for ctx in contexts.keys():
-        print('Context {}'.format(ctx))
-        for login in contexts[ctx]:
-            print('  Login: {}'.format(login.login))
-
 def get_context(mooltipass, args):
     """Request username & password for a given context."""
     print('Accept memory management mode to continue...')
@@ -165,12 +157,11 @@ def get_context(mooltipass, args):
     else:
         for pnode in mooltipass.parent_nodes():
             print(pnode.service_name)
-            # TODO: print('  Login: ' + pnode.
-        get_all_contexts(mooltipass, args)
+            for cnode in pnode.child_nodes():
+                print('  Login: ' + cnode.login)
 
     print('Exiting memory management mode.')
     mooltipass.end_memory_management()
-
 
 def generate_random_password(args):
     """Generate and return a random password."""
