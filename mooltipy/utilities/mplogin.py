@@ -18,11 +18,12 @@
 """Manage contexts containing usernames & passwords."""
 
 import argparse
-import os
-import time
-import sys
+import fnmatch
 import getpass
 import logging
+import os
+import sys
+import time
 
 from mooltipy.mooltipass_client import MooltipassClient
 
@@ -41,7 +42,7 @@ def main_options():
 
     description = '{cmd_util} manages Mooltipass login contexts.'.format(
             cmd_util = cmd_util)
-    usage = '{cmd_util} [-h] ... {{get,set,del}} context'.format(
+    usage = '{cmd_util} [-h] ... {{get,set,del,list}} context'.format(
             cmd_util = cmd_util)
 
     # main
@@ -137,6 +138,20 @@ def main_options():
         parser.print_help()
         sys.exit(0)
 
+    # list
+    # ----
+    list_parser = subparsers.add_parser(
+            'list',
+            help='List login contexts',
+            prog=cmd_util + ' list')
+    list_parser.add_argument(
+            'context',
+            action='store',
+            default='*',
+            nargs='?',
+            help='supports shell-style wildcards; default is "*"')
+
+    # end subparsers
     args = parser.parse_args()
 
     if args.command == 'set':
@@ -146,26 +161,39 @@ def main_options():
 
     return args
 
-def get_all_contexts(mooltipass, args):
-    """Returns a list of all contexts for the authenticated user"""
-    contexts = mooltipass.read_all_nodes()
-    for ctx in contexts.keys():
-        print('Context {}'.format(ctx.service_name))
-        for login in contexts[ctx]:
-            print('  Login: {}'.format(login.login))
-
 def get_context(mooltipass, args):
-    """Request username & password for a given context."""
+    """Get a password for a given context."""
+    set_context = mooltipass.set_context(args.context)
+    if set_context == False:
+        print('Context unknown. Use list action to see available contexts')
+        sys.exit(1)
+    if set_context is None:
+        print('Log into the mooltipass and try again.')
+        sys.exit(1)
+
+    # Try to get password; 0 means there are multiple logins for this context
+    password = mooltipass.get_password()
+    if password == 0:
+        mooltipass.get_login()
+
+    password = mooltipass.get_password()
+    print(password)
+
+def list_context(mooltipass, args):
+    """List login contexts"""
     mooltipass.start_memory_management()
 
-    if args.context.lower() != 'all':
-        print('Not yet implemented.')
-        sys.exit(1)
-    else:
-        get_all_contexts(mooltipass, args)
+    s = '{:<40}{:<40}\n'.format('Context:','Login(s):')
+    s += '{:<40}{:<40}\n'.format('--------','---------')
+    for pnode in mooltipass.parent_nodes():
+        if fnmatch.fnmatch(pnode.service_name, args.context):
+            service_name = pnode.service_name
+            for cnode in pnode.child_nodes():
+                s += '{:<40}{:<40}\n'.format(service_name, cnode.login)
+                service_name = ''
 
+    print(s)
     mooltipass.end_memory_management()
-
 
 def generate_random_password(args):
     """Generate and return a random password."""
@@ -236,10 +264,16 @@ def del_context(mooltipass, args):
 
 def main():
 
+    logging.basicConfig(
+            #format='%(levelname)s\t %(funcName)s():\t %(message)s',
+            format='%(message)s',
+            level=logging.INFO)
+
     command_handlers = {
         'get':get_context,
         'set':set_context,
-        'del':del_context
+        'del':del_context,
+        'list':list_context
     }
 
     args = main_options()

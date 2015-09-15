@@ -29,7 +29,6 @@ import time
 import usb.core
 
 from .constants import *
-from collections import defaultdict
 
 # Uncomment for lots of debugging
 #logging.basicConfig(level=logging.DEBUG)
@@ -137,12 +136,12 @@ class _Mooltipass(object):
 
         self._epout.write(arraytosend)
 
-    def recv_packet(self, timeout=5000):
+    def recv_packet(self, timeout=17500):
         """Receives a packet from the mooltipass.
 
         Keyword arguments:
             timeout -- how long to wait for user to complete entering pin
-                    (default 5000 is sane for most requests?).
+                    (default 17500 coincides with Mootipass GUI timeout)
         """
         recv = None
         while True:
@@ -538,6 +537,7 @@ class _Mooltipass(object):
                 packet.append(eod)
                 packet.extend(data[i:i+BLOCK_SIZE])
                 self.send_packet(CMD_WRITE_32B_IN_DN, packet)
+                # TODO: Make debug info and report progress elsehow
                 logging.debug('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
                 recv, _ = self.recv_packet()
                 if eod == 0 and not recv[0]:
@@ -567,11 +567,10 @@ class _Mooltipass(object):
             if recv_len == 0x01:
                 break
             data.extend(recv[:32])
+            # TODO: Make debug info and report progress elsehow
             logging.debug('Received {0} bytes...'.format(str(len(data))))
 
         return data
-
-    # TODO: Add lots of commands...
 
     def _get_current_card_cpz(self):
         """Return CPZ of currently inserted card.
@@ -596,60 +595,6 @@ class _Mooltipass(object):
 
     # 0xC4 is reserved for response from Mooltipass.
 
-    class ParentNode(object):
-        """Represent node."""
-        def __init__(
-                self,
-                node_addr,
-                flags,
-                prev_parent_addr,
-                next_parent_addr,
-                next_child_addr,
-                service_name):
-
-            self.node_addr = node_addr
-            self.prev_parent_addr = prev_parent_addr
-            self.next_parent_addr = next_parent_addr
-            self.next_child_addr = next_child_addr
-            self.service_name = service_name
-        
-        def __str__(self):
-            return "<{}: Address:0x{:x}, PrevParent:0x{:x}, NextParent:0x{:x}, NextChild:0x{:x}, ServiceName:{}>".format(self.__class__.__name__, self.node_addr, self.prev_parent_addr, self.next_parent_addr, self.next_child_addr, self.service_name)
-
-        def __repr__(self):
-            return str(self)
-
-    class ChildNode(object):
-        def __init__(
-                self,
-                node_addr,
-                flags,
-                prev_child_addr,
-                next_child_addr,
-                description,
-                date_created,
-                date_last_used,
-                ctr,
-                login,
-                password):
-            self.node_addr = node_addr
-            self.flags = flags
-            self.prev_child_addr = prev_child_addr
-            self.next_child_addr = next_child_addr
-            self.description = description
-            self.date_created = date_created
-            self.date_last_used = date_last_used
-            self.ctr = ctr
-            self.login = login
-            self.password = password
-        
-        def __str__(self):
-            return "<{}: Address:0x{:x} PrevChild:0x{:x} NextChild:0x{:x} Login:{}>".format(self.__class__.__name__, self.node_addr, self.prev_child_addr, self.next_child_addr, self.login)
-
-        def __repr__(self):
-            return str(self)
-
-
     def read_node(self, node_number):
         """Read a node in flash. (0xC5)
 
@@ -671,54 +616,7 @@ class _Mooltipass(object):
             # Skip timeout once all packets are recieved
             pass
 
-        # Use flags to figure out the node type
-        flags = struct.unpack('<H', recv[:2])[0]
-        if flags & 0xC000 == 0x00:
-            # This is a parent node
-            prev_parent_addr, next_parent_addr, next_child_addr = \
-                struct.unpack('<HHH', recv[2:8])
-            recv = recv[8:66]
-            service_name = struct.unpack('<{}s'.format(len(recv)), recv)[0].strip('\0')
-            return self.ParentNode(
-                node_number,
-                flags,
-                prev_parent_addr,
-                next_parent_addr,
-                next_child_addr,
-                service_name)
-
-        elif flags & 0xC000 == 0x4000:
-            # This is a credential child node
-            prev_child_addr, next_child_addr, descr, date_created, date_last_used, ctr1, ctr2, ctr3, login, password = struct.unpack("<HH24sHH3b63s32s", recv[2:132])
-            ctr = (ctr1 << 16) + (ctr2 << 8) + ctr3
-            return self.ChildNode(node_number, flags, prev_child_addr, next_child_addr, descr[0], date_created, date_last_used, ctr, login, password)
-        elif flags & 0xC000 == 0x8000:
-            # This is the start of a data sequence
-            print("Data nodes are not yet supported!")
-        else:
-            print("Unknown node type received!")
-    
-    def read_all_nodes(self):
-        node_list = defaultdict(list)
-        parent_address = self.get_starting_parent_address()
-        while True:
-            parent_node = self.read_node(parent_address)
-            logging.debug(parent_node)
-            if parent_node.next_child_addr == 0:
-                logging.info("Skipping {} with no children"\
-                             .format(parent_node.service_name))
-            else:
-                child_node = self.read_node(parent_node.next_child_addr)
-                node_list[parent_node].append(child_node)
-                logging.debug(child_node)
-                while child_node.next_child_addr != 0:
-                    child_node = self.read_node(child_node.next_child_addr)
-                    logging.debug(child_node)
-                    node_list[parent_node].append(child_node)
-            parent_address = parent_node.next_parent_addr
-            if parent_address == 0:
-                break
-        return node_list
+        return recv[self._DATA_INDEX:]
 
     def _write_node(self, node_number, packet_number):
         """Write a node in flash. (0xC6)
