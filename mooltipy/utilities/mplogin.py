@@ -293,7 +293,7 @@ def main():
 
     # Ping the mooltipass, an integral part of the initialization process.
     if not mooltipass.ping():
-        print('Mooltipass did not reply to a ping request!')
+        print('Mooltipass did not reply to a ping request!\n')
         sys.exit(1)
 
     # Ensure Mooltipass status
