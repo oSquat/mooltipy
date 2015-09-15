@@ -284,10 +284,13 @@ class _Mooltipass(object):
 
         Returns 1 or 0 indicating success or failure.
         """
-        self.send_packet(CMD_CHECK_PASSWORD, array('B', password + b'\x00'))
         recv = None
+        # A timer blocks repeated checking of passwords.
+        # A return of 0x02 means the timer is still counting down.
         while recv is None or recv == 0x02:
+            self.send_packet(CMD_CHECK_PASSWORD, array('B', password + b'\x00'))
             recv = self.recv_packet()[self._DATA_INDEX]
+            time.sleep(.2)
         return recv
 
     def add_context(self, context):
