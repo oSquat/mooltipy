@@ -64,11 +64,10 @@ def get_favorite(mooltipass, args):
 
 def set_favorite(mooltipass, args):
     """Sets a context into a favorite slot"""
-    all_contexts = mooltipass.read_all_nodes()
     ctx_favorite_list = []
-    for ctx in all_contexts:
-        for child in all_contexts[ctx]:
-            ctx_favorite_list.append((ctx, child))
+    for pnode in mooltipass.parent_nodes():
+        for cnode in pnode.child_nodes():
+            ctx_favorite_list.append((pnode, cnode))
 
     for index, ctx in enumerate(ctx_favorite_list):
         print('{} - {}:{}'.format(index, ctx[0].service_name, ctx[1].login))
