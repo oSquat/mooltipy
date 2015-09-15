@@ -165,10 +165,10 @@ def get_context(mooltipass, args):
     """Get a password for a given context."""
     set_context = mooltipass.set_context(args.context)
     if set_context == False:
-        print('Context unknown. Use list action to see available contexts')
+        print('Context unknown. Use list action to see available contexts\n')
         sys.exit(1)
     if set_context is None:
-        print('Log into the mooltipass and try again.')
+        print('Log into the mooltipass and try again.\n')
         sys.exit(1)
 
     # Try to get password; 0 means there are multiple logins for this context
@@ -232,17 +232,19 @@ def set_context(mooltipass, args):
     args.password += append[args.ap]
 
     if len(args.username) > 61:
-        print('Username must be <= 61 characters long!')
+        print('Username must be <= 61 characters long!\n')
         sys.exit(1)
 
     if len(args.password) > 31:
-        print('Password must be <= 31 characters long!')
+        print('Password must be <= 31 characters long!\n')
         sys.exit(1)
 
     # Set context and credentials
     # TODO: Interpret user denying addition of context and quit
     while not mooltipass.set_context(args.context):
-        mooltipass.add_context(args.context)
+        if not mooltipass.add_context(args.context):
+            print('Request to add context denied or timed out.\n')
+            sys.exit(1)
 
     if args.username:
         uname_ret = mooltipass.set_login(args.username)
@@ -250,16 +252,19 @@ def set_context(mooltipass, args):
         uname_ret = mooltipass.set_login('')
 
     if not uname_ret:
-        print('Set username failed!')
+        print('Set username failed!\n')
         sys.exit(1)
 
+    # check_password really slows things down because of timer when
+    # there isn't much harm in just asking the user to set the password.
+    #if not mooltipass.check_password(args.password):
     if not mooltipass.set_password(args.password):
-        print('Set password failed!')
+        print('Set password failed!\n')
         sys.exit(1)
 
 def del_context(mooltipass, args):
     """Delete a context in its entirety."""
-    print('Not yet implemented.')
+    print('Not yet implemented.\n')
     sys.exit(1)
 
 def main():
@@ -310,13 +315,5 @@ if __name__ == '__main__':
 
     main()
 
-    # TODO: Crucial
-    #   * Input validation
-    # TODO: Important
-    #   * Implement get password
-    #   * Canceling request to add context loops and can't be terminated.
-    #   * Call .check_password() before setting password to avoid superfluous
-    #     prompting of the user.
-    #   * Implement --length and --skip
     # TODO: Eventually
     #   * Implement delete
