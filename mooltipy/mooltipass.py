@@ -41,6 +41,7 @@ class _Mooltipass(object):
     Server / App-Mooltiplass relationship.
     """
 
+    _PKT_LEN_INDEX = 0x00
     _CMD_INDEX = 0x01
     _DATA_INDEX = 0x02
 
@@ -147,11 +148,11 @@ class _Mooltipass(object):
             recv = self._epin.read(self._epin.wMaxPacketSize, timeout=timeout)
             #logging.debug('\n\t' + str(recv))
             if recv is not None:
-                if recv[1] == 0xB9:
+                if recv[self._CMD_INDEX] == 0xB9:
                     # Unit sends 0xB9 when user is entering their PIN.
                     break
-                elif recv[1] == CMD_DEBUG:
-                    debug_msg = struct.unpack('{}s'.format(recv[0]-1), recv[2:recv[0]+1])[0]
+                elif recv[self._CMD_INDEX] == CMD_DEBUG:
+                    debug_msg = struct.unpack('{}s'.format(recv[self._PKT_LEN_INDEX]-1), recv[self._DATA_INDEX:recv[self._PKT_LEN_INDEX]+1])[0]
                     if debug_msg == "#MBE":
                         print("Received Memory Boundary Error Callback!")
                     elif debug_msg == "#NM":
@@ -162,7 +163,7 @@ class _Mooltipass(object):
                         print("Received unknown debug message {}".format(debug_msg))
                     print('Exiting...')
                     sys.exit(1)
-                elif recv[1] == 0xC4:
+                elif recv[self._CMD_INDEX] == 0xC4:
                     # The mooltipass may request the client resend its
                     # previous packet. I have not yet encountered this, but
                     # I guess it should be passed back to the calling
@@ -177,9 +178,10 @@ class _Mooltipass(object):
                 else:
                     break
             time.sleep(.5)
-        logging.debug('RX Packet - CMD:0x{:x} Length:{}'.format(recv[1], recv[0]))
-        logging.debug('{}'.format(recv[2:]))
-        return recv
+        logging.debug('RX Packet - CMD:0x{:x} Length:{}'.format(recv[self._CMD_INDEX], recv[self._PKT_LEN_INDEX]))
+        logging.debug('{}'.format(recv[self._DATA_INDEX:]))
+        # -1 for the command byte
+        return recv[self._DATA_INDEX:], recv[self._PKT_LEN_INDEX]-1
 
     def ping(self, data):
         """Ping the mooltipass. (0xA1)
@@ -219,7 +221,9 @@ class _Mooltipass(object):
                         Eg. "v1"
         """
         self.send_packet(CMD_VERSION, None)
-        return self.recv_packet()
+        recv, recv_len = self.recv_packet()
+        # -1 byte for flash size
+        return struct.unpack('<b{}s'.format(recv_len-1), recv[0:recv_len])
 
     def set_context(self, context):
         """Set mooltipass context. (0xA3)
@@ -234,7 +238,8 @@ class _Mooltipass(object):
         """
 
         self.send_packet(CMD_CONTEXT, array('B', context + b'\x00'))
-        return self.recv_packet(10000)[self._DATA_INDEX]
+        recv, _ = self.recv_packet(10000)
+        return recv[0]
 
     def get_login(self):
         """Get the login for current context. (0xA4)
@@ -242,11 +247,11 @@ class _Mooltipass(object):
         Returns the login as a string or 0 on failure.
         """
         self.send_packet(CMD_GET_LOGIN, None)
-        recv = self.recv_packet()[self._DATA_INDEX:]
+        recv, recv_len = self.recv_packet()
         if recv[0] == 0x00:
             return 0
         else:
-            return struct.unpack('<{}s'.format(len(recv)), recv)[0].strip('\0')
+            return struct.unpack('<{}s'.format(recv_len), recv[:recv_len])[0]
 
     def get_password(self):
         """Get the password for current context. (0xA5)
@@ -254,11 +259,11 @@ class _Mooltipass(object):
         Returns the password as a string or 0 on failure.
         """
         self.send_packet(CMD_GET_PASSWORD, None)
-        recv = self.recv_packet()[self._DATA_INDEX:]
+        recv, recv_len = self.recv_packet()
         if recv[0] == 0x00:
             return 0
         else:
-            return struct.unpack('<{}s'.format(len(recv)), recv)[0].strip('\0')
+            return struct.unpack('<{}s'.format(recv_len), recv[:recv_len])[0]
 
     def set_login(self, login):
         """Set a login. (0xA6)
@@ -266,7 +271,8 @@ class _Mooltipass(object):
         Return 1 or 0 indicating success or failure.
         """
         self.send_packet(CMD_SET_LOGIN, array('B', login + b'\x00'))
-        return self.recv_packet()[self._DATA_INDEX]
+        recv, _ = self.recv_packet()
+        return recv[0]
 
     def set_password(self, password):
         """Set a password for current context. (0xA7)
@@ -274,7 +280,8 @@ class _Mooltipass(object):
         Return 1 or 0 indicating success or failure.
         """
         self.send_packet(CMD_SET_PASSWORD, array('B', password + b'\x00'))
-        return self.recv_packet()[self._DATA_INDEX]
+        recv, _ = self.recv_packet()
+        return recv[0]
 
     def check_password(self, password):
         """Compare given password to set password for context. (0xA8)
@@ -287,7 +294,8 @@ class _Mooltipass(object):
         self.send_packet(CMD_CHECK_PASSWORD, array('B', password + b'\x00'))
         recv = None
         while recv is None or recv == 0x02:
-            recv = self.recv_packet()[self._DATA_INDEX]
+            recv, _ = self.recv_packet()
+            recv = recv[0]
         return recv
 
     def add_context(self, context):
@@ -296,7 +304,8 @@ class _Mooltipass(object):
         Return 1 or 0 indicating success or failure.
         """
         self.send_packet(CMD_ADD_CONTEXT, array('B', context + b'\x00'))
-        return self.recv_packet()[self._DATA_INDEX]
+        recv, _ = self.recv_packet()
+        return recv[0]
         # TODO: Is there any way to delete contexts?
 
     def _set_bootloader_password(self, password):
@@ -314,7 +323,8 @@ class _Mooltipass(object):
         # TODO: Is this intended to be directly used in generation of
         #   a random password, or as seed in external PRNG?
         self.send_packet(CMD_GET_RANDOM_NUMBER, None)
-        return self.recv_packet()[self._DATA_INDEX]
+        recv, _ = self.recv_packet()
+        return recv[0]
 
     def start_memory_management(self, timeout=20000):
         """Enter memory management mode. (0xAD)
@@ -327,7 +337,8 @@ class _Mooltipass(object):
         """
         print('Accept memory management mode to continue...')
         self.send_packet(CMD_START_MEMORYMGMT, None)
-        return self.recv_packet(timeout)
+        recv, _ = self.recv_packet(timeout)
+        return recv[0]
 
     def _start_media_import(self):
         """Request send media to Mooltipass. (0xAE)
@@ -457,7 +468,8 @@ class _Mooltipass(object):
         # Make constants, create list of invalid combinations and raise
         # error if encountered.
         self.send_packet(CMD_MOOLTIPASS_STATUS, None)
-        return self.recv_packet()[self._DATA_INDEX]
+        recv, _ = self.recv_packet()
+        return recv[0]
 
     # Where is 0xBA?
 
@@ -482,7 +494,8 @@ class _Mooltipass(object):
         Return 1 or 0 indicating success or failure.
         """
         self.send_packet(CMD_SET_DATA_SERVICE, array('B', context + b'\x00'))
-        return self.recv_packet()[self._DATA_INDEX]
+        recv, _ = self.recv_packet()
+        return recv[0]
 
     def add_data_context(self, context):
         """Add a data context. (0xBF)
@@ -494,7 +507,8 @@ class _Mooltipass(object):
         """
         print('sending ' + context)
         self.send_packet(CMD_ADD_DATA_SERVICE, array('B', context + b'\x00'))
-        return self.recv_packet()[self._DATA_INDEX]
+        recv, _ = self.recv_packet()
+        return recv[0]
 
     def write_data_context(self, data):
         """Write to data context in blocks of 32 bytes. (0xC0)
@@ -524,8 +538,9 @@ class _Mooltipass(object):
                 packet.extend(data[i:i+BLOCK_SIZE])
                 self.send_packet(CMD_WRITE_32B_IN_DN, packet)
                 # TODO: Make debug info and report progress elsehow
-                logging.info('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
-                if eod == 0 and not self.recv_packet()[self._DATA_INDEX]:
+                logging.debug('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
+                recv, _ = self.recv_packet()
+                if eod == 0 and not recv[0]:
                     raise RuntimeError('Unexpected return')
 
             return True
@@ -546,14 +561,14 @@ class _Mooltipass(object):
 
         while True:
             self.send_packet(CMD_READ_32B_IN_DN, None)
-            recv = self.recv_packet(5000)
-            if len(recv) < 4:
+            recv, recv_len = self.recv_packet(5000)
+            if recv_len < 4:
                 print(recv)
-            if recv[0] == 0x01:
+            if recv_len == 0x01:
                 break
-            data.extend(recv[self._DATA_INDEX:32+self._DATA_INDEX])
+            data.extend(recv[:32])
             # TODO: Make debug info and report progress elsehow
-            logging.info('Received {0} bytes...'.format(str(len(data))))
+            logging.debug('Received {0} bytes...'.format(str(len(data))))
 
         return data
 
@@ -592,18 +607,16 @@ class _Mooltipass(object):
         data = array('B', node_addr)
         self.send_packet(CMD_READ_FLASH_NODE, data)
 
-        recv = self.recv_packet()
-        recv_size = recv[0]
+        recv, recv_size = self.recv_packet()
         try:
-            while recv_size == 62:
-                recv_extra = self.recv_packet()
-                recv_size = recv_extra[0]
-                recv.extend(recv_extra[self._DATA_INDEX:])
+            while recv_size == 61:
+                recv_extra, recv_size = self.recv_packet()
+                recv.extend(recv_extra)
         except usb.core.USBError:
             # Skip timeout once all packets are recieved
             pass
 
-        return recv[self._DATA_INDEX:]
+        return recv
 
     def _write_node(self, node_number, packet_number):
         """Write a node in flash. (0xC6)
@@ -627,8 +640,8 @@ class _Mooltipass(object):
         address is 2 bytes).
         """
         self.send_packet(CMD_GET_FAVORITE, array('B', [slot_id]))
-        packet = self.recv_packet()[self._DATA_INDEX:]
-        return struct.unpack('<HH', packet[0:4])
+        recv, recv_len = self.recv_packet()
+        return struct.unpack('<HH', recv[0:4])
 
     def set_favorite(self, slot_id, addr_tuple):
         """Set a favorite. (0xC8)
@@ -645,7 +658,8 @@ class _Mooltipass(object):
                       addr_tuple[1]&0xFF, (addr_tuple[1]&0xFF00)>>8))
         self.send_packet(CMD_SET_FAVORITE,
                          array('B', [slot_id, addr_tuple[0]&0xFF, (addr_tuple[0]&0xFF00)>>8, addr_tuple[1]&0xFF, (addr_tuple[1]&0xFF00)>>8]))
-        return self.recv_packet()[self._DATA_INDEX:]
+        recv, _ = self.recv_packet()
+        return recv
 
     def get_starting_parent_address(self):
         """Get the address of starting parent? (0xC9)
@@ -653,9 +667,9 @@ class _Mooltipass(object):
         Return slot address or None on failure.
         """
         self.send_packet(CMD_GET_STARTING_PARENT, None)
-        recv = self.recv_packet()
+        recv, _ = self.recv_packet()
         parent_addr = \
-            struct.unpack('h', recv[self._DATA_INDEX:self._DATA_INDEX+2])[0]
+            struct.unpack('h', recv[:2])[0]
         return (lambda ret: None if 0 else ret)(parent_addr)
 
     def _set_starting_parent(self, parent_addr):
@@ -723,5 +737,6 @@ class _Mooltipass(object):
         Return 1 or 0 indicating success or failure."""
         print('Exiting memory management mode.')
         self.send_packet(CMD_END_MEMORYMGMT, None)
-        return self.recv_packet()[self._DATA_INDEX]
+        recv, _ = self.recv_packet()
+        return recv[0]
 
