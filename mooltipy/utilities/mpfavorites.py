@@ -31,7 +31,7 @@ except NameError:
     # For python 2/3 compatibility
     pass
 
-def get_all_favorites(mooltipass, args):
+def list_favorites(mooltipass, args):
     favorites = []
     for slot in range(0, 14):
         fav_slot_info = mooltipass.get_favorite(slot)
@@ -49,10 +49,7 @@ def get_all_favorites(mooltipass, args):
 
 def get_favorite(mooltipass, args):
     """Gets the favorite information from the specified slot"""
-    if args.favorite_slot == 'all':
-        get_all_favorites(mooltipass, args)
-        return
-    args.favorite_slot = int(args.favorite_slot)
+    # Argparse takes care of validation for us
     fav_slot_info = mooltipass.get_favorite(args.favorite_slot)
     if fav_slot_info[0] == 0:
         print("No favorite stored in slot {}".format(args.favorite_slot))
@@ -128,9 +125,7 @@ def main_options():
             'get',
             help = 'Get a favorite or favorites',
             prog = cmd_util+' get')
-    valid_slots = [str(num) for num in range(0, 14)]
-    valid_slots.append('all')
-    get_parser.add_argument("favorite_slot", help='specify context (e.g. Lycos.com)', choices=valid_slots, type=str)
+    get_parser.add_argument("favorite_slot", help='specify context (e.g. Lycos.com)', choices=range(0,14), type=int)
 
     # set
     # ---
@@ -147,6 +142,12 @@ def main_options():
             prog=cmd_util+' del')
     del_parser.add_argument("favorite_slot", type=int, help='specify context (e.g. Lycos.com)', choices=range(0,14))
 
+    # list
+    # ----
+    list_parser = subparsers.add_parser(
+            'list',
+            help = 'List all favorites',
+            prog = cmd_util+' list')
 
     if not len(sys.argv) > 1:
         parser.print_help()
@@ -161,7 +162,8 @@ def main():
     command_handlers = {
         'get':get_favorite,
         'set':set_favorite,
-        'del':del_favorite
+        'del':del_favorite,
+        'list':list_favorites
     }
 
     args = main_options()
@@ -202,14 +204,3 @@ def main():
 if __name__ == '__main__':
 
     main()
-
-    # TODO: Crucial
-    #   * Input validation
-    # TODO: Important
-    #   * Implement get password
-    #   * Canceling request to add context loops and can't be terminated.
-    #   * Call .check_password() before setting password to avoid superfluous
-    #     prompting of the user.
-    #   * Implement --length and --skip
-    # TODO: Eventually
-    #   * Implement delete

@@ -251,7 +251,7 @@ class _Mooltipass(object):
         if recv[0] == 0x00:
             return 0
         else:
-            return struct.unpack('<{}s'.format(recv_len), recv)[0].strip('\0')
+            return struct.unpack('<{}s'.format(recv_len), recv[:recv_len])[0]
 
     def get_password(self):
         """Get the password for current context. (0xA5)
@@ -259,11 +259,11 @@ class _Mooltipass(object):
         Returns the password as a string or 0 on failure.
         """
         self.send_packet(CMD_GET_PASSWORD, None)
-        recv, recv_len = self.recv_packet()[self._DATA_INDEX:]
+        recv, recv_len = self.recv_packet()
         if recv[0] == 0x00:
             return 0
         else:
-            return struct.unpack('<{}s'.format(recv_len), recv)[0].strip('\0')
+            return struct.unpack('<{}s'.format(recv_len), recv[:recv_len])[0]
 
     def set_login(self, login):
         """Set a login. (0xA6)
@@ -616,7 +616,7 @@ class _Mooltipass(object):
             # Skip timeout once all packets are recieved
             pass
 
-        return recv[self._DATA_INDEX:]
+        return recv
 
     def _write_node(self, node_number, packet_number):
         """Write a node in flash. (0xC6)
