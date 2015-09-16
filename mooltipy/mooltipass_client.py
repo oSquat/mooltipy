@@ -117,13 +117,16 @@ class MooltipassClient(_Mooltipass):
 
         return super(MooltipassClient, self).start_memory_management(timeout)
 
-    def write_data_context(self, data):
+    def write_data_context(self, data, callback=None):
         """Write to mooltipass data context.
 
         Adds a layer to data which is necessary to enable retrieval.
 
         Arguments:
             data -- iterable data to save in context
+            callback -- function to receive tuple containing progress
+                    in tuple form (x, y) where x is bytes sent and y
+                    is size of transmission.
 
         Return true/false on success/error.
         """
@@ -136,7 +139,7 @@ class MooltipassClient(_Mooltipass):
         ext_data = array('B', lod)
         ext_data.extend(data)
 
-        return super(MooltipassClient, self).write_data_context(ext_data)
+        return super(MooltipassClient, self).write_data_context(ext_data, callback)
 
     def read_data_context(self):
         """Read data from context. Return data as array or None."""

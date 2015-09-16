@@ -111,6 +111,17 @@ def get_context(mooltipass, args):
     with open(args.filepath, 'wb') as fout:
         data.tofile(fout)
 
+def callback(progress):
+    """Report progress of file transfer."""
+    current = progress[0]
+    full = progress[1]
+    if current > full:
+        current = full
+    percent = float(current)*100 / full
+    progbar = int(round(percent / 5,0))
+    sys.stdout.write('\r[{0}] {1:>0.1f}%'.format('#'*progbar + ' '*(20-progbar), percent))
+    sys.stdout.flush()
+
 def set_context(mooltipass, args):
     """Create and import data to a data context."""
     while not mooltipass.set_data_context(args.context):
@@ -119,7 +130,7 @@ def set_context(mooltipass, args):
 
     with open(args.filepath, 'rb') as fin:
         data = array('B',fin.read())
-    mooltipass.write_data_context(data)
+    mooltipass.write_data_context(data, callback)
 
 def del_context(mooltipass, args):
     """Delete a data context."""
@@ -135,6 +146,7 @@ def main():
             #format='%(levelname)s\t %(funcName)s():\t %(message)s',
             format='%(message)s',
             level=logging.INFO)
+            #level=logging.DEBUG)
 
     command_handlers = {
         'get':get_context,
@@ -168,6 +180,8 @@ def main():
         pass
     except Exception as e:
         print('An error occurred: \n{}'.format(e))
+    finally:
+        print('')
 
 if __name__ == '__main__':
 
@@ -175,8 +189,10 @@ if __name__ == '__main__':
 
     # TODO: Important
     #   * Unexpected return on import to existing context?
+	# 	* Handle error on mpdata set if context exists
     # TODO: Soon
     #   * On import, referencing file that doesn't exist causes failure
+    #   * Replace optparse with argparse
     #   * On export, warn before clobbering file?
     #   * Warn on large files liable to induce sleep
     # TODO: Eventually

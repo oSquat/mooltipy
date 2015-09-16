@@ -499,7 +499,7 @@ class _Mooltipass(object):
         self.send_packet(CMD_ADD_DATA_SERVICE, array('B', context + b'\x00'))
         return self.recv_packet()[self._DATA_INDEX]
 
-    def write_data_context(self, data):
+    def write_data_context(self, data, callback=None):
         """Write to data context in blocks of 32 bytes. (0xC0)
 
         Data is sent to the mooltipass in 32 byte blocks. The the first
@@ -512,6 +512,9 @@ class _Mooltipass(object):
 
         Arguments:
             data -- iterable data to save in context
+            callback -- function to receive tuple containing progress
+                    in tuple form (x, y) where x is bytes sent and y
+                    is size of transmission.
 
         Return true on success or raises RuntimeError if an unexpected
         response is received from the mooltipass.
@@ -526,10 +529,10 @@ class _Mooltipass(object):
                 packet.append(eod)
                 packet.extend(data[i:i+BLOCK_SIZE])
                 self.send_packet(CMD_WRITE_32B_IN_DN, packet)
-                # TODO: Make debug info and report progress elsehow
-                logging.info('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
                 if eod == 0 and not self.recv_packet()[self._DATA_INDEX]:
                     raise RuntimeError('Unexpected return')
+                if callback:
+                    callback((i+32, len(data)))
 
             return True
 
