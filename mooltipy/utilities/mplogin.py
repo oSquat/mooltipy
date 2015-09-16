@@ -165,11 +165,9 @@ def get_context(mooltipass, args):
     """Get a password for a given context."""
     set_context = mooltipass.set_context(args.context)
     if set_context == False:
-        print('Context unknown. Use list action to see available contexts\n')
-        sys.exit(1)
+        raise RuntimeError('Context unknown. Use list action to see available contexts')
     if set_context is None:
-        print('Log into the mooltipass and try again.\n')
-        sys.exit(1)
+        raise RuntimeError('Log into the mooltipass and try again.')
 
     # Try to get password; 0 means there are multiple logins for this context
     password = mooltipass.get_password()
@@ -232,19 +230,15 @@ def set_context(mooltipass, args):
     args.password += append[args.ap]
 
     if len(args.username) > 61:
-        print('Username must be <= 61 characters long!\n')
-        sys.exit(1)
+        raise RuntimeError('Username must be <= 61 characters long!')
 
     if len(args.password) > 31:
-        print('Password must be <= 31 characters long!\n')
-        sys.exit(1)
+        raise RuntimeError('Password must be <= 31 characters long!')
 
     # Set context and credentials
-    # TODO: Interpret user denying addition of context and quit
     while not mooltipass.set_context(args.context):
         if not mooltipass.add_context(args.context):
-            print('Request to add context denied or timed out.\n')
-            sys.exit(1)
+            raise RuntimeError('Request to add context denied or timed out.')
 
     if args.username:
         uname_ret = mooltipass.set_login(args.username)
@@ -252,20 +246,17 @@ def set_context(mooltipass, args):
         uname_ret = mooltipass.set_login('')
 
     if not uname_ret:
-        print('Set username failed!\n')
-        sys.exit(1)
+        raise RuntimeError('Set username failed!')
 
     # check_password really slows things down because of timer when
     # there isn't much harm in just asking the user to set the password.
     #if not mooltipass.check_password(args.password):
     if not mooltipass.set_password(args.password):
-        print('Set password failed!\n')
-        sys.exit(1)
+        raise RuntimeError('Set password failed!')
 
 def del_context(mooltipass, args):
     """Delete a context in its entirety."""
-    print('Not yet implemented.\n')
-    sys.exit(1)
+    raise RuntimeError('Not yet implemented.')
 
 def main():
 
@@ -283,33 +274,30 @@ def main():
 
     args = main_options()
 
-    mooltipass = MooltipassClient()
+    try:
+        mooltipass = MooltipassClient()
+    except Exception as e:
+        print('An error occurred accessing the mooltipass: \n{}'.format(e))
+        sys.exit(1)
 
     try:
+        # Ensure Mooltipass status
+        quiet_bool = False
+        if not mooltipass.get_status() == 5:
+            print('Insert a card and unlock the Mooltipass or cancel with ctrl-c')
+            while True:
+                if mooltipass.get_status() == 5:
+                    break
+                time.sleep(1)
+
+        command_handlers[args.command](mooltipass, args)
+        sys.exit(0)
+    except KeyboardInterrupt, SystemExit:
         pass
     except Exception as e:
-        print(e)
-        sys.exit(1)
-
-    # Ping the mooltipass, an integral part of the initialization process.
-    if not mooltipass.ping():
-        print('Mooltipass did not reply to a ping request!\n')
-        sys.exit(1)
-
-    # Ensure Mooltipass status
-    quiet_bool = False
-    while True:
-        status = mooltipass.get_status()
-        if status == 5:
-            break
-        if not quiet_bool:
-            print('Insert a card and unlock the Mooltipass...')
-        quiet_bool = True
-        time.sleep(1)
-    quiet_bool = False
-
-    command_handlers[args.command](mooltipass, args)
-    sys.exit(0)
+        print('An error occurred: \n{}'.format(e))
+    finally:
+        print('')
 
 if __name__ == '__main__':
 
