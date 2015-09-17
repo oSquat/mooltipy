@@ -47,7 +47,8 @@ class _Mooltipass(object):
             'screen_saver_speed' : SCREEN_SAVER_SPEED_PARAM,
             }
 
-    _PKT_LEN_INDEX = 0x00
+    #_PKT_LEN_INDEX = 0x00
+    _CTRL_INDEX = 0x00
     _CMD_INDEX = 0x01
     _DATA_INDEX = 0x02
 
@@ -158,7 +159,7 @@ class _Mooltipass(object):
                     # Unit sends 0xB9 when user is entering their PIN.
                     break
                 elif recv[self._CMD_INDEX] == CMD_DEBUG:
-                    debug_msg = struct.unpack('{}s'.format(recv[self._PKT_LEN_INDEX]-1), recv[self._DATA_INDEX:recv[self._PKT_LEN_INDEX]+1])[0]
+                    debug_msg = struct.unpack('{}s'.format(recv[self._CTRL_INDEX]-1), recv[self._DATA_INDEX:recv[self._CTRL_INDEX]+1])[0]
                     if debug_msg == "#MBE":
                         print("Received Memory Boundary Error Callback!")
                     elif debug_msg == "#NM":
@@ -184,10 +185,14 @@ class _Mooltipass(object):
                 else:
                     break
             time.sleep(.5)
-        logging.debug('RX Packet - CMD:0x{:x} Length:{}'.format(recv[self._CMD_INDEX], recv[self._PKT_LEN_INDEX]))
+        logging.debug('RX Packet - CMD:0x{:x} Length:{}'.format(recv[self._CMD_INDEX], recv[self._CTRL_INDEX]))
         logging.debug('{}'.format(recv[self._DATA_INDEX:]))
-        # -1 for the command byte
-        return recv[self._DATA_INDEX:], recv[self._PKT_LEN_INDEX]-1
+        # Data sent out of the generic HID is in the form of a 64 byte packet.
+        # In most cases information is returned in the data portion of a packet
+        # (the trailing 62 bytes). However, the first byte (byte 0) may contain
+        # control information -- this could be a length indicator or boolean 
+        # value.
+        return recv[self._DATA_INDEX:], recv[self._CTRL_INDEX]
 
     def ping(self, data):
         """Ping the mooltipass. (0xA1)
@@ -227,9 +232,8 @@ class _Mooltipass(object):
                         Eg. "v1"
         """
         self.send_packet(CMD_VERSION, None)
-        recv, recv_len = self.recv_packet()
-        # -1 byte for flash size
-        return struct.unpack('<b{}s'.format(recv_len-1), recv[0:recv_len])
+        recv, ctrl = self.recv_packet()
+        return struct.unpack('<b{}s'.format(ctrl-1), recv[0:ctrl])
 
     def set_context(self, context):
         """Set mooltipass context. (0xA3)
@@ -253,11 +257,13 @@ class _Mooltipass(object):
         Returns the login as a string or 0 on failure.
         """
         self.send_packet(CMD_GET_LOGIN, None)
-        recv, recv_len = self.recv_packet()
-        if recv[0] == 0x00:
+        recv, ctrl = self.recv_packet()
+        # ctrl byte is packet length including cmd byte; subtract 1
+        ctrl -= 1
+        if recv[0] == 0:
             return 0
         else:
-            return struct.unpack('<{}s'.format(recv_len), recv[:recv_len])[0]
+            return struct.unpack('<{}s'.format(ctrl), recv[:ctrl])[0]
 
     def get_password(self):
         """Get the password for current context. (0xA5)
@@ -265,11 +271,13 @@ class _Mooltipass(object):
         Returns the password as a string or 0 on failure.
         """
         self.send_packet(CMD_GET_PASSWORD, None)
-        recv, recv_len = self.recv_packet()
-        if recv[0] == 0x00:
+        recv, ctrl = self.recv_packet()
+        # ctrl byte is packet length including cmd byte; subtract 1
+        ctrl -= 1
+        if recv[0] == 0:
             return 0
         else:
-            return struct.unpack('<{}s'.format(recv_len), recv[:recv_len])[0]
+            return struct.unpack('<{}s'.format(ctrl), recv[:ctrl])[0]
 
     def set_login(self, login):
         """Set a login. (0xA6)
@@ -297,11 +305,15 @@ class _Mooltipass(object):
 
         Returns 1 or 0 indicating success or failure.
         """
-        self.send_packet(CMD_CHECK_PASSWORD, array('B', password + b'\x00'))
         recv = None
+        # A timer blocks repeated checking of passwords.
+        # A return of 0x02 means the timer is still counting down.
         while recv is None or recv == 0x02:
+            self.send_packet(CMD_CHECK_PASSWORD, array('B', password + b'\x00'))
             recv, _ = self.recv_packet()
             recv = recv[0]
+            time.sleep(.2)
+
         return recv
 
     def add_context(self, context):
@@ -516,7 +528,7 @@ class _Mooltipass(object):
         recv, _ = self.recv_packet()
         return recv[0]
 
-    def write_data_context(self, data):
+    def write_data_context(self, data, callback=None):
         """Write to data context in blocks of 32 bytes. (0xC0)
 
         Data is sent to the mooltipass in 32 byte blocks. The the first
@@ -529,6 +541,9 @@ class _Mooltipass(object):
 
         Arguments:
             data -- iterable data to save in context
+            callback -- function to receive tuple containing progress
+                    in tuple form (x, y) where x is bytes sent and y
+                    is size of transmission.
 
         Return true on success or raises RuntimeError if an unexpected
         response is received from the mooltipass.
@@ -543,11 +558,11 @@ class _Mooltipass(object):
                 packet.append(eod)
                 packet.extend(data[i:i+BLOCK_SIZE])
                 self.send_packet(CMD_WRITE_32B_IN_DN, packet)
-                # TODO: Make debug info and report progress elsehow
-                logging.debug('wrote {0} of {1} bytes...'.format(str(i+32), str(len(data))))
-                recv, _ = self.recv_packet()
-                if eod == 0 and not recv[0]:
+                # The unit should send a ctrl character = 0 only when EOD
+                if eod == 0 and not self.recv_packet()[0][0]:
                     raise RuntimeError('Unexpected return')
+                if callback:
+                    callback((i+32, len(data)))
 
             return True
 
@@ -556,7 +571,7 @@ class _Mooltipass(object):
             print('SENT TERMINATE')
             raise
 
-    def read_data_context(self):
+    def read_data_context(self, callback=None):
         """Read data from context in blocks of 32 bytes. (0xC1)
 
         Get successive 32 byte blocks of data until EOD.
@@ -567,14 +582,14 @@ class _Mooltipass(object):
 
         while True:
             self.send_packet(CMD_READ_32B_IN_DN, None)
-            recv, recv_len = self.recv_packet(5000)
-            if recv_len < 4:
-                print(recv)
-            if recv_len == 0x01:
+            recv, ctrl = self.recv_packet(5000)
+            if ctrl == 0x01:
                 break
             data.extend(recv[:32])
-            # TODO: Make debug info and report progress elsehow
-            logging.debug('Received {0} bytes...'.format(str(len(data))))
+            if callback:
+                if len(data) == 32:
+                    full_size = struct.unpack('>L', data[:4])[0]
+                callback((len(data), full_size))
 
         return data
 
@@ -615,7 +630,7 @@ class _Mooltipass(object):
 
         recv, recv_size = self.recv_packet()
         try:
-            while recv_size == 61:
+            while recv_size == 62:
                 recv_extra, recv_size = self.recv_packet()
                 recv.extend(recv_extra)
         except usb.core.USBError:
@@ -646,7 +661,7 @@ class _Mooltipass(object):
         address is 2 bytes).
         """
         self.send_packet(CMD_GET_FAVORITE, array('B', [slot_id]))
-        recv, recv_len = self.recv_packet()
+        recv, _ = self.recv_packet()
         return struct.unpack('<HH', recv[0:4])
 
     def set_favorite(self, slot_id, addr_tuple):
