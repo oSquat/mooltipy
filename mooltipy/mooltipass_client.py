@@ -40,8 +40,8 @@ class MooltipassClient(_Mooltipass):
         if not self.ping():
             raise RuntimeError('Mooltipass did not respond to ping.')
         version_info = self.get_version()
-        self.flash_size = version_info[2]
-        self.version = version_info[3:].tostring()
+        self.flash_size = version_info[0]
+        self.version = version_info[1]
         logging.debug('Connected to Mooltipass {} w/ {} Mb Flash'.format(
                 self.version,
                 self.flash_size))
@@ -66,12 +66,12 @@ class MooltipassClient(_Mooltipass):
 
             recv = None
             while recv is None or \
-                    recv[self._DATA_INDEX] != data[0] or \
-                    recv[self._DATA_INDEX+1] != data[1] or \
-                    recv[self._DATA_INDEX+2] != data[2] or \
-                    recv[self._DATA_INDEX+3] != data[3]:
+                    recv[0] != data[0] or \
+                    recv[1] != data[1] or \
+                    recv[2] != data[2] or \
+                    recv[3] != data[3]:
 
-                recv = super(MooltipassClient, self).recv_packet()
+                recv, _ = super(MooltipassClient, self).recv_packet()
 
             logging.debug("Mooltipass replied to our ping message")
             return True
@@ -166,7 +166,7 @@ class MooltipassClient(_Mooltipass):
         """Extend mooltipass to unpack return and create object."""
         recv = super(MooltipassClient, self).read_node(node_number)
         # Use flags to figure out the node type
-        flags = struct.unpack('<H', recv[0:2])[0]
+        flags = struct.unpack('<H', recv[:2])[0]
         if flags & 0xC000 == 0x00:
             # This is a parent node
             prev_parent_addr, next_parent_addr, next_child_addr = \
