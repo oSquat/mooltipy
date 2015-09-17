@@ -141,14 +141,25 @@ class MooltipassClient(_Mooltipass):
 
         return super(MooltipassClient, self).write_data_context(ext_data, callback)
 
-    def read_data_context(self):
-        """Read data from context. Return data as array or None."""
-        data = super(MooltipassClient, self).read_data_context()
+    def read_data_context(self, callback=None):
+        """Read data from context. 
+
+        Arguments:
+            callback    -- Callback function which must accept a tuple
+                            containing (x, y) where x is the current
+                            position and y is the full size expected.
+
+        Return data as array or None.
+        """
+
+        data = super(MooltipassClient, self).read_data_context(callback)
         # See write_data_context for explanation of lod
         lod = struct.unpack('>L', data[:4])[0]
         logging.debug('Expecting: ' + str(lod) + ' bytes...')
-        # TODO: Should I raise an error or otherwise handle when
-        #   length of data received is shorter than expected?
+        if not lod <= len(data):
+            raise RuntimeError('The size of data received from the device ' + \
+                    'does not match what was expected. This can happen if ' + \
+                    'a data transfer was cancelled.')
         return data[4:lod+4]
 
     def read_node(self, node_number):

@@ -541,7 +541,7 @@ class _Mooltipass(object):
             print('SENT TERMINATE')
             raise
 
-    def read_data_context(self):
+    def read_data_context(self, callback=None):
         """Read data from context in blocks of 32 bytes. (0xC1)
 
         Get successive 32 byte blocks of data until EOD.
@@ -553,13 +553,13 @@ class _Mooltipass(object):
         while True:
             self.send_packet(CMD_READ_32B_IN_DN, None)
             recv = self.recv_packet(5000)
-            if len(recv) < 4:
-                print(recv)
             if recv[0] == 0x01:
                 break
             data.extend(recv[self._DATA_INDEX:32+self._DATA_INDEX])
-            # TODO: Make debug info and report progress elsehow
-            logging.info('Received {0} bytes...'.format(str(len(data))))
+            if callback:
+                if len(data) == 32:
+                    full_size = struct.unpack('>L', data[:4])[0]
+                callback((len(data), full_size))
 
         return data
 

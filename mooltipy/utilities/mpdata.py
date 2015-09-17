@@ -107,7 +107,7 @@ def get_context(mooltipass, args):
     if not mooltipass.set_data_context(args.context):
         raise RuntimeError('Context does not exist; cannot get context.')
 
-    data = mooltipass.read_data_context()
+    data = mooltipass.read_data_context(callback)
     with open(args.filepath, 'wb') as fout:
         data.tofile(fout)
 
@@ -119,7 +119,8 @@ def callback(progress):
         current = full
     percent = float(current)*100 / full
     progbar = int(round(percent / 5,0))
-    sys.stdout.write('\r[{0}] {1:>0.1f}%'.format('#'*progbar + ' '*(20-progbar), percent))
+    sys.stdout.write('\r[{0}] {1:>0.1f}%'.format(
+            '#'*progbar + ' '*(20-progbar), percent))
     sys.stdout.flush()
 
 def set_context(mooltipass, args):
@@ -179,7 +180,7 @@ def main():
         print('')
         pass
     except Exception as e:
-        print('An error occurred: \n{}'.format(e))
+        print('\nAn error occurred: \n{}'.format(e))
     finally:
         print('')
 
