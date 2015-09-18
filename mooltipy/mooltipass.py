@@ -41,6 +41,12 @@ class _Mooltipass(object):
     Server / App-Mooltiplass relationship.
     """
 
+    """valid_params contains a dictionary of all valid mooltipass
+    configuration parameters and their internal mapping"""
+    valid_params = {
+            'screen_saver_speed' : SCREEN_SAVER_SPEED_PARAM,
+            }
+
     #_PKT_LEN_INDEX = 0x00
     _CTRL_INDEX = 0x00
     _CMD_INDEX = 0x01
@@ -755,3 +761,18 @@ class _Mooltipass(object):
         recv, _ = self.recv_packet()
         return recv[0]
 
+    def set_param(self, param, value):
+        """Sets a setting on the mooltipass
+
+        Returns 1 or 0 indicating success or failure."""
+        self.send_packet(CMD_SET_MOOLTIPASS_PARM, array("B", [param, value]))
+        recv, _ = self.recv_packet()
+        return recv[0]
+
+    def get_param(self, param):
+        """Gets the value of a setting on the mooltipass
+
+        Returns the setting value."""
+        self.send_packet(CMD_GET_MOOLTIPASS_PARM, array("B", [param]))
+        recv, _ = self.recv_packet()
+        return recv[0]

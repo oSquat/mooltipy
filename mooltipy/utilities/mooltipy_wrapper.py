@@ -23,11 +23,13 @@ import sys
 from mooltipy.utilities import mpdata
 from mooltipy.utilities import mplogin
 from mooltipy.utilities import mpfavorites
+from mooltipy.utilities import mpparams
 
 utilities = {
     'data': mpdata,
     'login': mplogin,
     'favorites': mpfavorites,
+    'parameters': mpparams,
 }
 
 def main_options():
