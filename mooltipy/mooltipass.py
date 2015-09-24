@@ -44,7 +44,23 @@ class _Mooltipass(object):
     """valid_params contains a dictionary of all valid mooltipass
     configuration parameters and their internal mapping"""
     valid_params = {
-            'screen_saver_speed' : SCREEN_SAVER_SPEED_PARAM,
+            'keyboard_layout'    : (KEYBOARD_LAYOUT_PARAM, hex),
+            'user_intr_timer'    : (USER_INTER_TIMEOUT_PARAM, int),
+            'lock_timeout_enable': (LOCK_TIMEOUT_ENABLE_PARAM, bool),
+            'lock_timeout'       : (LOCK_TIMEOUT_PARAM, int),
+            'touch_di'           : (TOUCH_DI_PARAM, int),
+            # TOUCH_WHEEL_OS_PARAM_OLD - Not used anymore
+            'touch_prox_os'      : (TOUCH_PROX_OS_PARAM, hex),
+            'offline_mode'       : (OFFLINE_MODE_PARAM, bool),
+            'screensaver'        : (SCREENSAVER_PARAM, bool),
+            'touch_charge_time'  : (TOUCH_CHARGE_TIME_PARAM, int),
+            'touch_wheel os_0'   : (TOUCH_WHEEL_OS_PARAM0, hex),
+            'touch_wheel os_1'   : (TOUCH_WHEEL_OS_PARAM1, hex),
+            'touch_wheel os_2'   : (TOUCH_WHEEL_OS_PARAM2, hex),
+            'flash_screen'       : (FLASH_SCREEN_PARAM, bool),
+            'user_req_cancel'    : (USER_REQ_CANCEL_PARAM, bool),
+            'tutorial'           : (TUTORIAL_BOOL_PARAM, bool),
+            'screen_saver_speed' : (SCREEN_SAVER_SPEED_PARAM, int)
             }
 
     _PKT_LEN_INDEX = 0x00

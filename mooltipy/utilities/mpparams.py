@@ -34,6 +34,14 @@ def set_param(mooltipass, args):
     if success != 1:
         print("Failed to set parameter {} to {}".format(mooltipass.valid_params[args.param], args.value))
 
+def list_params(mooltipass, args):
+    print("Current Mooltipass Parameters")
+    print("-----------------------------")
+    for param_name, param in sorted(mooltipass.valid_params.iteritems()):
+        param, formatter = (param)
+        value = mooltipass.get_param(param)
+        print("{:<20}: {}".format(param_name, formatter(value)))
+
 def main_options():
     """Handles command-line interface, arguments & options. """
 
@@ -79,6 +87,13 @@ def main_options():
     set_parser.add_argument("param", help='Which parameter to set', choices=MooltipassClient.valid_params.keys())
     set_parser.add_argument("value", help='Value to set for a parameter')
 
+    # list
+    # ----
+    list_parser = subparsers.add_parser(
+            'list',
+            help = 'List the current value of all known parameters',
+            prog = cmd_util+' list')
+
     if not len(sys.argv) > 1:
         parser.print_help()
         sys.exit(0)
@@ -92,6 +107,7 @@ def main():
     command_handlers = {
         'get':get_param,
         'set':set_param,
+        'list':list_params,
     }
 
     args = main_options()
