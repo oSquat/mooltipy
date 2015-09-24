@@ -30,7 +30,10 @@ def get_param(mooltipass, args):
     print("Current value of {}: {}".format(args.param, value))
 
 def set_param(mooltipass, args):
-    success = mooltipass.set_param(mooltipass.valid_params[args.param], int(args.value))
+    if args.value not in mooltipass.valid_params[args.param].allowed_range:
+        print("The value {} for {} is not in the allowed range {}",
+              args.value, args.param, mooltipass.valid_params[args.param].allowed_range)
+    success = mooltipass.set_param(mooltipass.valid_params[args.param].param, args.value)
     if success != 1:
         print("Failed to set parameter {} to {}".format(mooltipass.valid_params[args.param], args.value))
 
@@ -38,9 +41,11 @@ def list_params(mooltipass, args):
     print("Current Mooltipass Parameters")
     print("-----------------------------")
     for param_name, param in sorted(mooltipass.valid_params.iteritems()):
-        param, formatter = (param)
-        value = mooltipass.get_param(param)
-        print("{:<20}: {}".format(param_name, formatter(value)))
+        value = mooltipass.get_param(param.param)
+        print("{:<20}: {}".format(param_name, param.formatter(value)))
+
+def auto_int(x):
+    return int(x, 0)
 
 def main_options():
     """Handles command-line interface, arguments & options. """
@@ -85,7 +90,7 @@ def main_options():
             help = 'Set or update a favorite',
             prog = cmd_util+' set')
     set_parser.add_argument("param", help='Which parameter to set', choices=MooltipassClient.valid_params.keys())
-    set_parser.add_argument("value", help='Value to set for a parameter')
+    set_parser.add_argument("value", help='Value to set for a parameter', type=auto_int)
 
     # list
     # ----

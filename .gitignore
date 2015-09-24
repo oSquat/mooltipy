@@ -9,3 +9,4 @@ MYNOTES
 example.py
 venv
 *.out
+*.swo
