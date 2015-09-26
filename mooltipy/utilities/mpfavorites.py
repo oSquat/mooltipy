@@ -62,7 +62,7 @@ def get_favorite(mooltipass, args):
 def set_favorite(mooltipass, args):
     """Sets a context into a favorite slot"""
     ctx_favorite_list = []
-    for pnode in mooltipass.parent_nodes():
+    for pnode in mooltipass.parent_nodes('login'):
         for cnode in pnode.child_nodes():
             ctx_favorite_list.append((pnode, cnode))
 
@@ -78,6 +78,7 @@ def set_favorite(mooltipass, args):
         favorite_slot = int(input("Please select a favorite slot(0-13):"))
 
     print('Putting {}:{} in favorite slot {}'.format(ctx_favorite_list[selected_favorite][0].service_name, ctx_favorite_list[selected_favorite][1].login, favorite_slot))
+    print(ctx_favorite_list[selected_favorite][0].node_addr, ctx_favorite_list[selected_favorite][1].node_addr)
     logging.debug('Parent Addr:0x{:x} Child Addr:0x{:x}'.format(ctx_favorite_list[selected_favorite][0].node_addr, ctx_favorite_list[selected_favorite][1].node_addr))
 
     mooltipass.set_favorite(favorite_slot,

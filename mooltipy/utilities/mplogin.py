@@ -183,7 +183,7 @@ def list_context(mooltipass, args):
 
     s = '{:<40}{:<40}\n'.format('Context:','Login(s):')
     s += '{:<40}{:<40}\n'.format('--------','---------')
-    for pnode in mooltipass.parent_nodes():
+    for pnode in mooltipass.parent_nodes('login'):
         if fnmatch.fnmatch(pnode.service_name, args.context):
             service_name = pnode.service_name
             for cnode in pnode.child_nodes():

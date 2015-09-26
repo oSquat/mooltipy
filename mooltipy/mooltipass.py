@@ -746,6 +746,11 @@ class _Mooltipass(object):
 
         Return slot address or None on failure.
         """
+        self.send_packet(CMD_GET_DN_START_PARENT, None)
+        recv, _ = self.recv_packet()
+        parent_addr = \
+            struct.unpack('h', recv[:2])[0]
+        return (lambda ret: None if 0 else ret)(parent_addr)
         logging.info('Not yet implemented')
         pass
 
