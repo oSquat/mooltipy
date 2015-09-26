@@ -204,31 +204,84 @@ class MooltipassClient(_Mooltipass):
         return _ParentNodes(node_type, self)
 
 
-class ParentNode(object):
-    """Represent a parent node."""
+class Node(object):
 
-    node_addr = None
-    next_child_addr = None
-    service_name = str()
+    addr = None
+    raw = None
+
+    @property
+    def flags(self):
+        return struct.unpack('<H', self.raw[:2])[0]
+
+    @flags.setter
+    def flags(self, value):
+        # I'm not sure there's any reason to want to set the flags property.
+        pass
+
+    @property
+    def prev_addr(self):
+        return struct.unpack('<H', self.raw[2:4])[0]
+
+    @prev_addr.setter
+    def prev_addr(self, value):
+        pass
+
+    @property
+    def next_addr(self):
+        return struct.unpack('<H', self.raw[4:6])[0]
+
+    @next_addr.setter
+    def next_addr(self, value):
+        pass
 
     def __init__(self, node_addr, recv, parent = None):
-        """Arguments:
-                node_addr   -- current node address
-                recv        -- raw return from read_node()
-                parent      -- a weak reference to our parent object,
-                    (the MooltipassClient object).
-        """
-        self.node_addr = node_addr
-        self.flags = struct.unpack('<H', recv[:2])[0]
-        self.prev_parent_addr, \
-        self.next_parent_addr, \
-        self.next_child_addr = \
-                struct.unpack('<HHH', recv[2:8])
-        recv = recv[8:66]
-        self.service_name = struct.unpack('<{}s'.format(
-                len(recv)), recv)[0].strip('\0')
+        self.addr = node_addr
+        self.raw = recv
         self._parent_ref = weakref.ref(parent)
         self._parent = self._parent_ref()
+
+class ParentNode(Node):
+    """Represent a parent node."""
+
+    @property
+    def flags(self):
+        return super(ParentNode, self).flags
+
+    @flags.setter
+    def flags(self, value):
+        super(ParentNode, self).flags
+
+    @property
+    def prev_parent_addr(self):
+        return super(ParentNode, self).prev_addr
+
+    @prev_parent_addr.setter
+    def prev_parent_addr(self, value):
+        super(ParentNode, self).prev_addr
+
+    @property
+    def next_parent_addr(self):
+        return super(ParentNode, self).next_addr
+
+    @next_parent_addr.setter
+    def next_parent_addr(self, value):
+        super(ParentNode, self).next_addr
+
+    @property
+    def next_child_addr(self):
+        return struct.unpack('<H', self.raw[6:8])[0]
+
+    @next_child_addr.setter
+    def next_child_addr(self, value):
+        pass
+
+    @property
+    def service_name(self):
+        return struct.unpack('<{}s'.format(len(self.raw[8:66])), self.raw[8:66])[0].strip('\0')
+
+    @service_name.setter
+    def service_name(self, value):
+        pass
 
     def __str__(self):
         return "<{}: Address:0x{:x}, PrevParent:0x{:x}, NextParent:0x{:x}, NextChild:0x{:x}, ServiceName:{}>".format(self.__class__.__name__, self.node_addr, self.prev_parent_addr, self.next_parent_addr, self.next_child_addr, self.service_name)
