@@ -163,7 +163,7 @@ class MooltipassClient(_Mooltipass):
         return data[4:lod+4]
 
     def read_node(self, node_addr):
-        """Extend mooltipass to unpack return and create object."""
+        """Extend Mooltipass class to return a Node object."""
         PARENT_NODE = 0x0000
         CHILD_NODE = 0x4000
         DATA_NODE = 0x8000
@@ -191,8 +191,16 @@ class MooltipassClient(_Mooltipass):
 class Node(object):
     """Parent/Child/Data nodes have some overlapping structure.
 
-    Intended to be inherited by Parent/Child/Data node classes.
+    Node is intended to be inherited by Parent/Child/DataNode classes.
     """
+    # Nodes should accept a raw array of data from read_node(). Access to
+    # each element contained within a node should be controlled through
+    # properties. This is not a typical design in Python, but in our case
+    # manipulation of nodes should be minimal (so performance is not a
+    # concern), separate properties will help clearly delineate values
+    # from the contiguous array of data, and properties will be necessary
+    # for bound checking to aide in adhering to the constraints of the
+    # Mooltipass's node structure.
 
     addr = None
     raw = None
@@ -207,7 +215,7 @@ class Node(object):
 
     @property
     def first_addr(self):
-        # The 2 bytes after flags is always an address but its use 
+        # The 2 bytes after flags is always an address but its use
         # differs by node type:
         #  * ParentNode.prev_parent_addr
         #  * ChildNode.next_child_addr
