@@ -173,12 +173,12 @@ class MooltipassClient(_Mooltipass):
         flags = struct.unpack('<H', recv[:2])[0]
         if flags & 0xC000 == PARENT_NODE:
             # This is a parent node
-            return ParentNode(node_addr, recv, self)
+            return ParentNode(node_addr, recv, weakref.ref(self)())
         elif flags & 0xC000 == CHILD_NODE:
             # This is a credential child node
-            return ChildNode(node_addr, recv, self)
+            return ChildNode(node_addr, recv, weakref.ref(self)())
         elif flags & 0xC000 == DATA_NODE:
-            return ParentNode(node_addr, recv, self)
+            return ParentNode(node_addr, recv, weakref.ref(self)())
         else:
             raise RuntimeError("Unknown node type received!")
 
@@ -189,7 +189,10 @@ class MooltipassClient(_Mooltipass):
 
 
 class Node(object):
-    """Parent/Child/Data nodes overlap in structure."""
+    """Parent/Child/Data nodes have some overlapping structure.
+
+    Intended to be inherited by Parent/Child/Data node classes.
+    """
 
     addr = None
     raw = None
@@ -200,49 +203,32 @@ class Node(object):
 
     @flags.setter
     def flags(self, value):
-        # I'm not sure there's any reason to want to set the flags property.
         pass
 
-    # TODO: According to documentation:
-    # https://github.com/limpkin/mooltipass/blob/master/source_code/src/NODEMGMT/README.md
-    #       (see details about the node layout in google doc)
-    #
-    # ParentNodes first 6 bytes contain: flags, prevParentAddr, nextParentAddr
-    # ChildNodes  first 6 bytes contain: flags: nextChildAddr, prevChildAddr
-    # DataNodes   first 4 bytes contain: flags: nextDataAddr
-    #
-    # This makes our Node class intended to be inherited a bit less useful
-    # because only our first 2 bytes is consistently "flags". The next 2 bytes
-    # is always an address, but switches between next & previous.
-    #
-    # Consider if we should either skip the inheritable Node class or keep it as
-    # __init__ remains useful and the first two properties can be made suitable
-    # generic.
-
     @property
-    def prev_addr(self):
+    def first_addr(self):
+        # The 2 bytes after flags is always an address but its use 
+        # differs by node type:
+        #  * ParentNode.prev_parent_addr
+        #  * ChildNode.next_child_addr
+        #  * DataNode.next_addr
         return struct.unpack('<H', self.raw[2:4])[0]
 
-    @prev_addr.setter
-    def prev_addr(self, value):
+    @first_addr.setter
+    def first_addr(self, value):
         pass
 
-    @property
-    def next_addr(self):
-        return struct.unpack('<H', self.raw[4:6])[0]
-
-    @next_addr.setter
-    def next_addr(self, value):
-        pass
-
-    def __init__(self, node_addr, recv, parent = None):
+    def __init__(self, node_addr, recv, parent_weak_ref = None):
         self.addr = node_addr
         self.raw = recv
-        self._parent_ref = weakref.ref(parent)
-        self._parent = self._parent_ref()
+        self._parent = parent_weak_ref
+
 
 class ParentNode(Node):
-    """Represent a parent node."""
+    """Represent a parent node.
+
+    Inherits Node.
+    """
 
     @property
     def flags(self):
@@ -254,19 +240,19 @@ class ParentNode(Node):
 
     @property
     def prev_parent_addr(self):
-        return super(ParentNode, self).prev_addr
+        return super(ParentNode, self).first_addr
 
     @prev_parent_addr.setter
     def prev_parent_addr(self, value):
-        super(ParentNode, self).prev_addr
+        super(ParentNode, self).first_addr
 
     @property
     def next_parent_addr(self):
-        return super(ParentNode, self).next_addr
+        return struct.unpack('<H', self.raw[4:6])[0]
 
     @next_parent_addr.setter
     def next_parent_addr(self, value):
-        super(ParentNode, self).next_addr
+        pass
 
     @property
     def next_child_addr(self):
@@ -296,7 +282,10 @@ class ParentNode(Node):
 
 
 class ChildNode(Node):
-    """Represent a child node."""
+    """Represent a child node.
+
+    Inherits Node.
+    """
 
     @property
     def flags(self):
@@ -308,19 +297,19 @@ class ChildNode(Node):
 
     @property
     def prev_child_addr(self):
-        return super(ChildNode, self).prev_addr
+        return super(ChildNode, self).first_addr
 
     @prev_child_addr.setter
     def prev_child_addr(self, value):
-        super(ChildNode, self).prev_addr
+        super(ChildNode, self).first_addr
 
     @property
     def next_child_addr(self):
-        return super(ChildNode, self).next_addr
+        return struct.unpack('<H', self.raw[4:6])[0]
 
     @next_child_addr.setter
     def next_child_addr(self, value):
-        super(ChildNode, self).next_addr
+        pass
 
     @property
     def description(self):
@@ -334,17 +323,9 @@ class ChildNode(Node):
     def date_created(self):
         return struct.unpack('<H', self.raw[30:32])[0]
 
-    @date_created.setter
-    def date_created(self, value):
-        pass
-
     @property
     def date_last_used(self):
         return struct.unpack('<H', self.raw[32:34])[0]
-
-    @date_last_used.setter
-    def date_last_used(self, value):
-        pass
 
     @property
     def ctr(self):
@@ -363,10 +344,6 @@ class ChildNode(Node):
     @property
     def password(self):
         return struct.unpack('<32s', self.raw[100:132])[0]
-
-    @password.setter
-    def password(self, value):
-        pass
 
 
     def __str__(self):
