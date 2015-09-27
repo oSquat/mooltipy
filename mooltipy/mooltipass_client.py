@@ -304,19 +304,19 @@ class ChildNode(Node):
         super(ChildNode, self).flags
 
     @property
-    def prev_child_addr(self):
-        return super(ChildNode, self).first_addr
-
-    @prev_child_addr.setter
-    def prev_child_addr(self, value):
-        super(ChildNode, self).first_addr
-
-    @property
     def next_child_addr(self):
-        return struct.unpack('<H', self.raw[4:6])[0]
+        return super(ChildNode, self).first_addr
 
     @next_child_addr.setter
     def next_child_addr(self, value):
+        super(ChildNode, self).first_addr
+
+    @property
+    def prev_child_addr(self):
+        return struct.unpack('<H', self.raw[4:6])[0]
+
+    @prev_child_addr.setter
+    def prev_child_addr(self, value):
         pass
 
     @property
@@ -360,6 +360,8 @@ class ChildNode(Node):
     def __repr__(self):
         return str(self)
 
+class DataNode(Node):
+    
 
 class _ParentNodes(object):
     """Parent node iterator.
