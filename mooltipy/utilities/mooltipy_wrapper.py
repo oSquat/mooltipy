@@ -50,6 +50,10 @@ def main_options():
 
     args = parser.parse_args()
 
+    # Alias some utilities
+    if args.utility in ['params']:
+        args.utility = 'parameters'
+
     if not args.utility.lower() in utilities.keys():
         parser.print_help()
         sys.exit(1)

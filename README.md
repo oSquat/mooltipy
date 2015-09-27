@@ -7,12 +7,13 @@ Under heavy development. This could be called beta quality at the moment.
 
 ## Installation & usage
 You can install or upgrade to the lastest stable release of mooltipy using pip.
+
 ```
 # Install
-user@box:~/$ sudo pip install mooltipy
+$ sudo pip install mooltipy
 
 # Upgrade
-user@box:~/$ sudo pip install mooltipy --upgrade
+$ sudo pip install mooltipy --upgrade
 ```
 
 ### Manage login contexts
@@ -32,20 +33,20 @@ $ mooltipy set example.com -u user_name -p
 Get passwords from the Mooltipass:
 
 ```
-user@box:~/$ mysql --user root --password=$(mplogin get mysql)
+$ mysql --user root --password=$(mplogin get mysql)
 ```
 
 List contexts stored in the Mooltipass:
 
 ```
-user@box:~/$ mplogin list
+$ mooltipy login list
 Context:                                Login(s):
 --------                                ---------
 Example.com                             user_name
 Example.net                             user_name
 
 # Unix shell-style globbing supported
-user@box:~/$ mplogin list *.net
+$ mooltipy list *.net
 Context:                                Login(s):
 --------                                ---------
 Example.net                             user_name
@@ -56,8 +57,8 @@ The Mooltipass can be used to securely store small data files! Think ssh or gpg
 keys and cryptocurrency wallets.
 
 ```
-$ mooltipy data import ssh_key ~/.ssh/id_rsa
-$ mooltipy data export ssh_key ./restored_key
+$ mooltipy data set ssh_key ~/.ssh/id_rsa
+$ mooltipy data get ssh_key ./restored_key
 ```
 
 **Warning**: Do not disconnect your mooltipass during data transfer! Ctrl-C can
@@ -67,21 +68,51 @@ be used to gracefully cancel a transfer.
 Use the favorites utility to get, set and remove entries in favorite slots.
 
 ```
-$ mooltipy favorites get --help
-$ mooltipy favorites set --help
-$ mooltipy favorites del --help
+$ mooltipy favorites list
+$ mooltipy favorites set
+$ mooltipy favorites del
+```
+
+### Set parameters
+There are some parameters which can be set on the Mooltipass such as the
+keyboard layout or enabling offline mode.
+
+```
+$ mooltipy parameters set offline_mode 1
+$ mooltipy parameters list
+Current Mooltipass Parameters
+-----------------------------
+flash_screen        : True
+keyboard_layout     : 0x92
+lock_timeout        : 60
+lock_timeout_enable : False
+offline_mode        : True
+screen_saver_speed  : 15
+screensaver         : False
+touch_charge_time   : 0
+touch_di            : 6
+touch_prox_os       : 0x73
+touch_wheel os_0    : 0x21
+touch_wheel os_1    : 0x21
+touch_wheel os_2    : 0x21
+tutorial            : False
+user_intr_timer     : 15
+user_req_cancel     : False
 ```
 
 ### Mooltipy is a wrapper
 The mooltipy command is a wrapper for individual utilities. To get help for any
 of the individual utilities you can:
+
 ```
 $ mooltipy data --help
 $ mooltipy login --help
 $ mooltipy favorites --help
 ```
+
 You can also call any of the utilities directly by prefixing *mp* to the name
 of the utility:
+
 ```
 $ mpdata --help
 $ mplogin --help
@@ -90,6 +121,7 @@ $ mpfavorites --help
 
 ### Using the Mooltipass module
 To utilize the MooltipassClient class:
+
 ```python
 from mooltipy import MooltipassClient
 import sys
@@ -106,12 +138,11 @@ mootipass.do_some_stuff()
 ```
 
 We'll document more soon, for now check out the MooltipassClient and
-Mooltipass classes to see what's implemented and see each utility as an
-example of how to interact with the device.
+Mooltipass classes to see what's implemented and see each utility as excellent
+examples of how to interact with the device.
 
 ### Support
-Problems, questions, comments, feature requests, flames? I'm
-[mooltigeek](http://reddit.com/u/mooltigeek) on the
-[Mooltipass subreddit](http://reddit.com/r/mooltipass) and I idle on freenode
-as modest in #mooltipass. E-mailing mooltipy [at my domain] oSquat.com will reach
-me very quickly too.
+Problems, questions, comments, feature requests? We're available in the
+[Mooltipass subreddit](http://reddit.com/r/mooltipass) and idle on freenode
+as modest or codegor* in #mooltipass. E-mailing mooltipy [at my domain] 
+oSquat.com will reach me very quickly too.
