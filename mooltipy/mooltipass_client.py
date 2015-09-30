@@ -24,6 +24,11 @@ from .mooltipass import _Mooltipass
 # Delete me after removing read_all_nodes
 from collections import defaultdict
 
+PARENT_NODE = 0x0000
+CHILD_NODE = 0x4000
+DATA_NODE = 0x8000
+
+
 class MooltipassClient(_Mooltipass):
     """Inherits _Mooltipass() and extends raw USB/firmware calls.
 
@@ -164,10 +169,6 @@ class MooltipassClient(_Mooltipass):
 
     def read_node(self, node_addr):
         """Extend Mooltipass class to return a Node object."""
-        PARENT_NODE = 0x0000
-        CHILD_NODE = 0x4000
-        DATA_NODE = 0x8000
-
         recv = super(MooltipassClient, self).read_node(node_addr)
         # Use flags to figure out the node type
         flags = struct.unpack('<H', recv[:2])[0]
@@ -180,7 +181,7 @@ class MooltipassClient(_Mooltipass):
         elif flags & 0xC000 == DATA_NODE:
             return ParentNode(node_addr, recv, weakref.ref(self)())
         else:
-            raise RuntimeError("Unknown node type received!")
+            return DataNode(node_addr, recv, weakref.ref(self)())
 
     def parent_nodes(self, node_type=None):
         """Return a ParentNodes iter."""
@@ -189,18 +190,18 @@ class MooltipassClient(_Mooltipass):
 
 
 class Node(object):
-    """Parent/Child/Data nodes have some overlapping structure.
+    """Parent/Child/Data nodes have some similar, overlapping structure.
 
-    Node is intended to be inherited by Parent/Child/DataNode classes.
+    The Node class is intended to be inherited by Parent/Child/DataNode classes.
     """
-    # Nodes should accept a raw array of data from read_node(). Access to
+    # Node should accept a raw array of data from read_node(). Access to
     # each element contained within a node should be controlled through
     # properties. This is not a typical design in Python, but in our case
     # manipulation of nodes should be minimal (so performance is not a
     # concern), separate properties will help clearly delineate values
-    # from the contiguous array of data, and properties will be necessary
-    # for bound checking to aide in adhering to the constraints of the
-    # Mooltipass's node structure.
+    # from the contiguous array of data provided by read_node(), and
+    # properties will be necessary for bound checking to aide in adhering
+    # to the constraints of the Mooltipass's node structure.
 
     addr = None
     raw = None
@@ -360,8 +361,33 @@ class ChildNode(Node):
     def __repr__(self):
         return str(self)
 
+
 class DataNode(Node):
-    
+    """Represent a data node.
+
+    Inherits Node.
+    """
+
+    @property
+    def flags(self):
+        return super(DataNode, self).flags
+
+    @flags.setter
+    def flags(self, value):
+        super(DataNode, self).flags
+
+    @property
+    def next_data_addr(self):
+        return super(DataNode, self).first_addr
+
+    @next_data_addr.setter
+    def next_data_addr(self, value):
+        super(DataNode, self).first_addr
+
+    @property
+    def data(self):
+        return struct.unpack('<128s', self.raw[4:132])[0]
+
 
 class _ParentNodes(object):
     """Parent node iterator.
@@ -409,19 +435,24 @@ class _ParentNodes(object):
 
 
 class _ChildNodes(object):
-    """Child node iterator.
+    """Child [or Data] node iterator.
 
     Intended to be returned to the user by way of method from
-    the ParentNode class: pnode.child_nodes().
+    the ParentNode class: MooltipassClient.ParentNode.child_nodes().
     """
+    # All storage nodes start with a parent. Some parents point to child nodes
+    # and store credentials; some parents point to data nodes to store data.
+    # Rather than a separate iter for child and data nodes, just this one
+    # is fine. The only problem is a slight inconsistency in the property
+    # containing the address of the next node in series explained below.
 
     current_node = None
-    next_child_addr = None
+    next_addr = None
 
     def __init__(self, parent):
         self._parent_ref = weakref.ref(parent)
         self._parent = self._parent_ref()
-        self.next_child_addr = self._parent.next_child_addr
+        self.next_addr = self._parent.next_child_addr
 
     def __iter__(self):
         return self
@@ -431,9 +462,19 @@ class _ChildNodes(object):
         return self.__next__()
 
     def __next__(self):
-        if self.next_child_addr == 0:
+        if self.next_addr == 0:
             raise StopIteration()
 
-        self.current_node = self._parent._parent.read_node(self.next_child_addr)
-        self.next_child_addr = self.current_node.next_child_addr
+        # The Mooltipass node structure goes Mooltipass.ParentNode.ChildNode
+        # and ._parent points up one level up therefore:
+        # self._parent._parent.read_node() == \
+        #       _ChildNodes.ParentNode.Mooltipass.read_node()
+        self.current_node = self._parent._parent.read_node(self.next_addr)
+
+        # Child nodes store the next address in .next_child_addr while data
+        # nodes use .next_data_addr
+        if self._parent.flags & 0xC000 == PARENT_NODE:
+            self.next_addr = self.current_node.next_child_addr
+        elif self._parent.flags & 0xC000 == DATA_NODE:
+            self.next_addr = self.current_node.next_data_addr
         return self.current_node
