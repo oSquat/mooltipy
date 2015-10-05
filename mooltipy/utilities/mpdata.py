@@ -60,7 +60,9 @@ def main_options():
             prog = cmd_util+' get')
     get_parser.add_argument('context', help='specify context')
     get_parser.add_argument('filepath',
-            help='file to which data should be written')
+            nargs = '?',
+            default = None,
+            help = 'file to which data should be written')
 
     # set
     # ---
@@ -70,7 +72,9 @@ def main_options():
             prog = cmd_util+' set')
     set_parser.add_argument('context', help='specify context')
     set_parser.add_argument('filepath',
-            help='file from which data should be read')
+            nargs = '?',
+            default = None,
+            help = 'file from which data should be read')
 
     # delete
     # ------
@@ -107,9 +111,15 @@ def get_context(mooltipass, args):
     if not mooltipass.set_data_context(args.context):
         raise RuntimeError('Context does not exist; cannot get context.')
 
-    data = mooltipass.read_data_context(callback)
-    with open(args.filepath, 'wb') as fout:
-        data.tofile(fout)
+    if args.filepath is None:
+        data = mooltipass.read_data_context()
+        for c in data:
+            sys.stdout.write(chr(c))
+        sys.stdout.flush()
+    else:
+        data = mooltipass.read_data_context(callback)
+        with open(args.filepath, 'wb') as fout:
+            data.tofile(fout)
 
 def callback(progress):
     """Report progress of file transfer."""
@@ -129,8 +139,12 @@ def set_context(mooltipass, args):
         if not mooltipass.add_data_context(args.context):
             raise RuntimeError('Request to add context denied or timed out.')
 
-    with open(args.filepath, 'rb') as fin:
-        data = array('B',fin.read())
+    if args.filepath is None:
+        data = array('B', sys.stdin.read())
+    else:
+        with open(args.filepath, 'rb') as fin:
+            data = array('B',fin.read())
+
     mooltipass.write_data_context(data, callback)
 
 def del_context(mooltipass, args):
@@ -139,7 +153,17 @@ def del_context(mooltipass, args):
 
 def list_context(mooltipass, args):
     """Display a list of data contexts."""
-    raise RuntimeError('Not yet implemented.')
+    mooltipass.start_memory_management()
+    s = '{:<40}{:<40}\n'.format('Context:','Approximate Size:')
+    s += '{:<40}{:<40}\n'.format('--------','----------------')
+    for pnode in mooltipass.parent_nodes('data'):
+        service_name = pnode.service_name
+        c = 0
+        for cnode in pnode.child_nodes():
+            c += 1
+        s += '{:<40}{:<40}\n'.format(service_name, c*128)
+    print(s)
+    mooltipass.end_memory_management()
 
 def main():
 
@@ -182,7 +206,7 @@ def main():
     except Exception as e:
         print('\nAn error occurred: \n{}'.format(e))
     finally:
-        print('')
+        pass
 
 if __name__ == '__main__':
 
