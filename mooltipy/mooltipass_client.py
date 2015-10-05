@@ -354,7 +354,6 @@ class ChildNode(Node):
     def password(self):
         return struct.unpack('<32s', self.raw[100:132])[0]
 
-
     def __str__(self):
         return "<{}: Address:0x{:x} PrevChild:0x{:x} NextChild:0x{:x} Login:{}>".format(self.__class__.__name__, self.node_addr, self.prev_child_addr, self.next_child_addr, self.login)
 
