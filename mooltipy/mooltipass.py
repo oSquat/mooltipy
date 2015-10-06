@@ -166,6 +166,8 @@ class _Mooltipass(object):
     def recv_packet(self, timeout=17500):
         """Receives a packet from the mooltipass.
 
+        Returns a tuple (data, data_length_indicator).
+
         Keyword arguments:
             timeout -- how long to wait for user to complete entering pin
                     (default 17500 coincides with Mootipass GUI timeout)
@@ -210,8 +212,11 @@ class _Mooltipass(object):
         # Data sent out of the generic HID is in the form of a 64 byte packet.
         # In most cases information is returned in the data portion of a packet
         # (the trailing 62 bytes). However, the first byte (byte 0) may contain
-        # control information -- this could be a length indicator or boolean 
+        # control information -- this could be a length indicator or boolean
         # value.
+        #
+        # read_node() returns a valid len indicator not counting the cmd byte...
+        #   so subtracting 1 is incorrect, but works in all other cases. 
 
         # Packet len includes the cmd byte, so subtract 1 to match the data len
         return recv[self._DATA_INDEX:], recv[self._PKT_LEN_INDEX]-1
@@ -648,9 +653,20 @@ class _Mooltipass(object):
 
         recv, data_len = self.recv_packet()
         try:
-            while data_len == 61:
+
+            # This is not right:
+            #   data_len is 61 when we receive 62 bytes... I still think
+            #   this is a problem when assuming data_len is returned
+            #   in recv_packet instead of considering it a "ctrl byte"
+            #
+            #   Consider if data_len - 1 because the mooltipass is counting
+            #    null terminator? Something is funky.
+
+            while True:
                 recv_extra, data_len = self.recv_packet()
-                recv.extend(recv_extra)
+                recv.extend(recv_extra[:data_len+1])
+                if data_len == 7:
+                    break
         except usb.core.USBError:
             # Skip timeout once all packets are recieved
             pass
