@@ -30,7 +30,7 @@ $ mooltipy set example.com -u user_name -c alnum
 $ mooltipy set example.com -u user_name -p
 ```
 
-Get passwords from the Mooltipass:
+Get passwords from the Mooltipass. This could be used in a script, for example.
 
 ```
 $ mysql --user root --password=$(mplogin get mysql)
@@ -59,6 +59,15 @@ keys and cryptocurrency wallets.
 ```
 $ mooltipy data set ssh_key ~/.ssh/id_rsa
 $ mooltipy data get ssh_key ./restored_key
+```
+
+It supports reading from / writing to stdin / stdout for convenience, but this
+can also be used as a workaround to store values greater than 31 characters.
+
+```
+$ echo "this-is-a-secure-api-key" | mpdata set example-api-key
+$ echo $(mpdata get example-api-key)
+this-is-a-secure-api-key
 ```
 
 **Warning**: Do not disconnect your mooltipass during data transfer! Ctrl-C can
@@ -128,10 +137,8 @@ import sys
 
 mooltipass = MooltipassClient()
 
-if mooltipass.ping():
-    print('Connected to the mooltipass!')
-else:
-    print('Failed to connect to mooltipass.')
+if mooltipass is None:
+    print('Could not connect to the Mooltipass')
     sys.exit(0)
 
 mootipass.do_some_stuff()
@@ -141,8 +148,8 @@ We'll document more soon, for now check out the MooltipassClient and
 Mooltipass classes to see what's implemented and see each utility as excellent
 examples of how to interact with the device.
 
-### Support
+## Support
 Problems, questions, comments, feature requests? We're available in the
 [Mooltipass subreddit](http://reddit.com/r/mooltipass) and idle on freenode
-as modest or codegor* in #mooltipass. E-mailing mooltipy [at my domain] 
+as vic or codegor* in #mooltipass. E-mailing mooltipy [at my domain] 
 oSquat.com will reach me very quickly too.
