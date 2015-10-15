@@ -21,13 +21,13 @@ Set login contexts with mooltipy:
 
 ```
 # Add or update user_name at example.com with a randomly generated password.
-$ mooltipy set example.com -u user_name
+$ mooltipy login set example.com -u user_name
 
 # ... some sites only allow alphanumeric passwords; avoid symbols in a generated password.
-$ mooltipy set example.com -u user_name -c alnum
+$ mooltipy login set example.com -u user_name -c alnum
 
 # ... ask for the password rather than generating one.
-$ mooltipy set example.com -u user_name -p
+$ mooltipy login set example.com -u user_name -p
 ```
 
 Get passwords from the Mooltipass. This could be used in a script, for example.
