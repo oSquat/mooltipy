@@ -183,6 +183,10 @@ class MooltipassClient(_Mooltipass):
         else:
             return DataNode(node_addr, recv, weakref.ref(self)())
 
+    def write_node(self, node):
+        """Write to a node in memory."""
+        return super(MooltipassClient, self)._write_node(node.addr, node.raw)
+
     def parent_nodes(self, node_type=None):
         """Return a ParentNodes iter."""
         # TODO: Comment and make a property too?
@@ -199,7 +203,7 @@ class Node(object):
     # properties. This is not a typical design in Python, but in our case
     # manipulation of nodes should be minimal (so performance is not a
     # concern), separate properties will help clearly delineate values
-    # from the contiguous array of data provided by read_node(), and
+    # from the contiguous array of bytes provided by read_node(), and
     # properties will be necessary for bound checking to aide in adhering
     # to the constraints of the Mooltipass's node structure.
 
@@ -232,6 +236,8 @@ class Node(object):
         self.raw = recv
         self._parent = parent_weak_ref
 
+    def write(self):
+        return super(MooltipassClient, self._parent)._write_node(self.addr, self.raw)
 
 class ParentNode(Node):
     """Represent a parent node.
@@ -344,10 +350,14 @@ class ChildNode(Node):
 
     @property
     def login(self):
-        return struct.unpack('<63s', self.raw[37:100])[0]
+        return struct.unpack('<63s', self.raw[37:100])[0].strip('\0')
 
     @login.setter
     def login(self, value):
+        if len(value) > 62:
+            raise RuntimeError('Login can not exceed 62 characters.')
+        value += ('\x00' * (len(value) - 63))
+        self.raw[37:100] = array('B', struct.pack('<63s', value))
         pass
 
     @property

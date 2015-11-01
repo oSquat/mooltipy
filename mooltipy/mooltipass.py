@@ -203,6 +203,9 @@ class _Mooltipass(object):
                     # One more thought, maybe just find out under what
                     # circumstances a 0xC4 may be received (e.g. data xfer
                     # only). Just leaving some thoughts.
+                    #
+                    # This feature is broken in the firmware and should
+                    # not be implemented.
                     print('HEY I GOT A 0xC4!')
                 else:
                     break
@@ -673,17 +676,29 @@ class _Mooltipass(object):
 
         return recv
 
-    def _write_node(self, node_number, packet_number):
+    def _write_node(self, node_number, node_data):
         """Write a node in flash. (0xC6)
 
         Arguments:
             node_number -- two bytes indicating the node number
-            pckt_number -- ??? byte(s) indicating the node number
+            node_data -- raw array of data that is the node
 
         Return 1 or 0 indicating success or failure.
         """
-        logging.info('Not yet implemented')
-        pass
+        c = 0
+        for i in range(0, len(node_data), 59):
+            # Nodes are written by sending a series of packets up to 62 bytes
+            # in size. The first two bytes contain the node address. A third
+            # byte contains the packet number. Then the remaining bytes (up to
+            # 59 of them) contain a chunk of the node data.
+            packet = array('B', struct.pack('<H', node_number))
+            packet.append(c)
+            packet.extend(node_data[i:i+59])
+            c += 1
+            self.send_packet(CMD_WRITE_FLASH_NODE, packet)
+            recv, _ = self.recv_packet()
+            if recv[0] == 0:
+                raise RuntimeError('Write node failed')
 
     def get_favorite(self, slot_id):
         """Get favorite for current user by slot ID. (0xC7)
