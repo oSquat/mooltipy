@@ -793,8 +793,15 @@ class _Mooltipass(object):
         Return 31 slot addresses max otherwise (see payload length
         field)??? or None on error.
         """
-        logging.info('Not yet implemented')
-        pass
+        packet = array('B',struct.pack('<H', start_addr))
+        self.send_packet(CMD_GET_30_FREE_SLOTS, packet)
+        recv, data_len = self.recv_packet()
+        print(recv)
+        for i in range(0,(data_len+1)*2,4):
+            print(struct.unpack('<H', recv[i:i+2])[0])
+        print('*'*80)
+        print(data_len)
+        print('*'*80)
 
     def get_starting_data_parent_address(self):
         """Get the address of the data starting parent.
