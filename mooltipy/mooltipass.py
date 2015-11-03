@@ -685,6 +685,9 @@ class _Mooltipass(object):
 
         Return 1 or 0 indicating success or failure.
         """
+        if not len(node_data) == 132:
+            raise RuntimeError('Nodes are expected to be 132 bytes; found {}.'.format(
+                len(node_data)))
         c = 0
         for i in range(0, len(node_data), 59):
             # Nodes are written by sending a series of packets up to 62 bytes
