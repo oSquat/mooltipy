@@ -247,8 +247,6 @@ class Node(object):
         self.raw = recv
         self._parent = parent_weak_ref
 
-    def write(self):
-        return super(MooltipassClient, self._parent)._write_node(self.addr, self.raw)
 
 class ParentNode(Node):
     """Represent a parent node.
@@ -301,6 +299,9 @@ class ParentNode(Node):
 
     def __repr__(self):
         return str(self)
+
+    def write(self):
+        return self._parent._write_node(self.addr, self.raw)
 
     def child_nodes(self):
         """Return a child node iter."""
@@ -381,9 +382,10 @@ class ChildNode(Node):
     def __repr__(self):
         return str(self)
 
-    def delete(self):
+    def write(self):
+        return self._parent._parent._write_node(self.addr, self.raw)
 
-        # TODO: Double-check this before removing the calls to .write()
+    def delete(self):
 
         # If a previous child node exists under our parent, we must update that
         # previous child node so it's next_child_addr points to the current
@@ -391,17 +393,17 @@ class ChildNode(Node):
         # previous child node, then we must update the parent node instead.
         if self.prev_child_addr == 0:
             self._parent.next_child_addr = self.next_child_addr
-            # self._parent.write()
+            self._parent.write()
         else:
             prev_child_node = self._parent._parent.read_node(self.prev_child_addr, self._parent)
             prev_child_node.next_child_addr = self.next_child_addr
-            # prev_child_node.write()
+            prev_child_node.write()
 
         # If there is a next_child_node, its prev_child_addr must be updated.
         if self.next_child_addr <> 0:
-            next_child_node = self._parent._parent.read_node(self.next_child_addr)
+            next_child_node = self._parent._parent.read_node(self.next_child_addr, self._parent)
             next_child_node.prev_child_addr = self.prev_child_addr
-            # next_child_node.write()
+            next_child_node.write()
 
 class DataNode(Node):
     """Represent a data node.
