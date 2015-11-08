@@ -386,24 +386,27 @@ class ChildNode(Node):
         return self._parent._parent._write_node(self.addr, self.raw)
 
     def delete(self):
-
-        # If a previous child node exists under our parent, we must update that
-        # previous child node so it's next_child_addr points to the current
-        # node's (the one we're deleting) next_child_addr. If there is no
-        # previous child node, then we must update the parent node instead.
+        """Delete a child node."""
         if self.prev_child_addr == 0:
+            # If there is a previous_child_node under this parent, update it
+            # so it points to the next valid node
             self._parent.next_child_addr = self.next_child_addr
             self._parent.write()
         else:
+            # If no prev_child_addr exists, update the parent node instead
             prev_child_node = self._parent._parent.read_node(self.prev_child_addr, self._parent)
             prev_child_node.next_child_addr = self.next_child_addr
             prev_child_node.write()
 
-        # If there is a next_child_node, its prev_child_addr must be updated.
+        # If there is a next_child_node, its prev_child_addr must be updated
         if self.next_child_addr <> 0:
             next_child_node = self._parent._parent.read_node(self.next_child_addr, self._parent)
             next_child_node.prev_child_addr = self.prev_child_addr
             next_child_node.write()
+
+        # Zero/fill the node so it is not considered an oprhan
+        self.raw = array('B', '\xff'*132)
+        self.write()
 
 class DataNode(Node):
     """Represent a data node.
