@@ -212,7 +212,7 @@ class MooltipassClient(_Mooltipass):
         Overrides mooltipass._set_starting_parent() and add some protection
         to the call by ensuring the address specified is valid.
         """
-        valid_addresses = []
+        valid_addresses = [0]
         for pnode in self.parent_nodes('login'):
             valid_addresses.append(pnode.addr)
 
@@ -326,8 +326,6 @@ class ParentNode(Node):
     def delete(self):
         """Delete a parent node."""
 
-        raise RuntimeError('Not yet fully tested!')
-        return
 
         # Delete all children belonging to our node
         for cnode in self.child_nodes():
@@ -347,7 +345,8 @@ class ParentNode(Node):
             next_node.prev_parent_addr = self.prev_parent_addr
             next_node.write()
 
-        # Zero/fill ???
+        # Fill node; zero addresses
+        self.raw = array('B', '\xff'*132)
         self.prev_parent_node = 0
         self.next_parent_node = 0
         self.write()
