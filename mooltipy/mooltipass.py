@@ -749,13 +749,15 @@ class _Mooltipass(object):
         """Set starting parent address. (0xCA)
 
         Arguments:
-            parent_addr - 2 bytes starting parent address (LSB)
+            parent_addr - Parent address to set.
 
         Return 1 or 0 indicating success or failure.
         """
-        logging.info('Not yet implemented')
-        pass
-
+        # firmware expects 2 bytes starting parent address (LSB)
+        self.send_packet(CMD_SET_STARTING_PARENT,
+                array('B', struct.pack('<H', parent_addr)))
+        recv, _ = self.recv_packet()
+        return recv[0]
 
     def _get_ctr_value(self):
         """Get the current user CTR value. (0xCB)

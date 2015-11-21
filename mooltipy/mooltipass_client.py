@@ -202,6 +202,22 @@ class MooltipassClient(_Mooltipass):
         # TODO: Comment and make a property too?
         return _ParentNodes(node_type, self)
 
+    def set_starting_parent(self, parent_addr):
+        """Set the starting parent node.
+
+        Overrides mooltipass._set_starting_parent() and add some protection
+        to the call by ensuring the address specified is valid.
+        """
+        valid_addresses = []
+        for pnode in self.parent_nodes('login'):
+            valid_addresses.append(pnode.addr)
+
+        # You can brick your mooltipass by providing an invalid starting parent.
+        if not parent_addr in valid_addresses:
+            raise RuntimeError('Can not set the starting parent to an invalid node address!')
+
+        return super(MooltipassClient, self)._set_starting_parent(parent_addr)
+
 
 class Node(object):
     """Parent/Child/Data nodes have some similar, overlapping structure.
@@ -268,7 +284,6 @@ class ParentNode(Node):
 
     @prev_parent_addr.setter
     def prev_parent_addr(self, value):
-        super(ParentNode, self).first_addr
 
     @property
     def next_parent_addr(self):
