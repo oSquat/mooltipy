@@ -46,8 +46,7 @@ class _Mooltipass(object):
     Server / App-Mooltiplass relationship.
     """
 
-    """valid_params contains a dictionary of all valid mooltipass
-    configuration parameters and their internal mapping"""
+    # dictionary of all valid mooltipass parameters and their internal mapping
     valid_params = {
             'keyboard_layout'    : MooltipassParam(KEYBOARD_LAYOUT_PARAM, hex, range(128+18, 128+39)),
             'user_intr_timer'    : MooltipassParam(USER_INTER_TIMEOUT_PARAM, int, range(0, 0xFF)),
@@ -86,7 +85,6 @@ class _Mooltipass(object):
         # Mostly ripped out of mooltipas_coms.py from the mooltipass
         # project originally written by Mathieu Stephan
         # https://github.com/limpkin/mooltipass/tools/python_comms/mooltipass_coms.py
-
 
         USB_VID = 0x16D0
         USB_PID = 0x09A0
@@ -351,7 +349,6 @@ class _Mooltipass(object):
         self.send_packet(CMD_ADD_CONTEXT, array('B', context + b'\x00'))
         recv, _ = self.recv_packet()
         return recv[0]
-        # TODO: Is there any way to delete contexts?
 
     def _set_bootloader_password(self, password):
         """??? (0xAA)"""
@@ -365,8 +362,6 @@ class _Mooltipass(object):
 
     def get_random_number(self):
         """Get 32 random bytes. (0xAC)"""
-        # TODO: Is this intended to be directly used in generation of
-        #   a random password, or as seed in external PRNG?
         self.send_packet(CMD_GET_RANDOM_NUMBER, None)
         recv, _ = self.recv_packet()
         return recv[0]
