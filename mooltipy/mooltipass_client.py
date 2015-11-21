@@ -198,7 +198,11 @@ class MooltipassClient(_Mooltipass):
         return super(MooltipassClient, self)._write_node(node.addr, node.raw)
 
     def parent_nodes(self, node_type=None):
-        """Return a ParentNodes iter."""
+        """Return a ParentNodes iter.
+
+        Arguments:
+            node_type = [login|data]
+        """
         # TODO: Comment and make a property too?
         return _ParentNodes(node_type, self)
 
@@ -284,6 +288,7 @@ class ParentNode(Node):
 
     @prev_parent_addr.setter
     def prev_parent_addr(self, value):
+        super(ParentNode, ParentNode).first_addr.__set__(self, value)
 
     @property
     def next_parent_addr(self):
