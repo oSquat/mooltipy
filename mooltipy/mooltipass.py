@@ -801,7 +801,7 @@ class _Mooltipass(object):
         print('*'*80)
 
     def get_starting_data_parent_address(self):
-        """Get the address of the data starting parent.
+        """Get the address of the data starting parent. (0xD1)
 
         Return slot address or None on failure.
         """
@@ -811,6 +811,10 @@ class _Mooltipass(object):
             struct.unpack('h', recv[:2])[0]
         return (lambda ret: None if 0 else ret)(parent_addr)
         logging.info('Not yet implemented')
+        pass
+
+    def set_starting_data_parent_addr(self):
+        """Set the first address for data nodes. (0xD2)"""
         pass
 
     def end_memory_management(self):
