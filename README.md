@@ -1,4 +1,7 @@
 # Mooltipy
+
+[![License](https://img.shields.io/badge/license-GPLv3%2B-blue.svg)](http://www.gnu.org/licenses/gpl.html)
+
 A [Mooltipass](http://themooltipass.com) Python library and command line
 management utilities.
 
