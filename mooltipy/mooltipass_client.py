@@ -26,7 +26,8 @@ from collections import defaultdict
 
 PARENT_NODE = 0x0000
 CHILD_NODE = 0x4000
-DATA_NODE = 0x8000
+PARENT_DATA = 0x8000
+CHILD_DATA = 0xC000
 
 
 class MooltipassClient(_Mooltipass):
@@ -188,7 +189,7 @@ class MooltipassClient(_Mooltipass):
         elif flags & 0xC000 == CHILD_NODE:
             # This is a credential child node
             return ChildNode(node_addr, recv, parent_weak_ref)
-        elif flags & 0xC000 == DATA_NODE:
+        elif flags & 0xC000 == PARENT_DATA:
             return ParentNode(node_addr, recv, parent_weak_ref)
         else:
             return DataNode(node_addr, recv, parent_weak_ref)
@@ -347,8 +348,10 @@ class ParentNode(Node):
 
         if self.prev_parent_addr == 0:
             # If deleting the first node in our linked list
-            # TODO: Branch on node type [login|data] and call accordingly
-            self._parent.set_starting_parent(self.next_parent_addr)
+            if self.flags & 0xC000 == PARENT_NODE:
+                self._parent.set_starting_parent(self.next_parent_addr)
+            elif self.flags & 0xC000 == PARENT_DATA:
+                self._parent.set_starting_data_parent_addr(self.next_parent_addr)
         else:
             prev_node = self._parent.read_node(self.prev_parent_addr)
             prev_node.next_parent_addr = self.next_parent_addr
@@ -498,6 +501,20 @@ class DataNode(Node):
     def data(self):
         return struct.unpack('<128s', self.raw[4:132])[0]
 
+    def write(self):
+        return self._parent._parent._write_node(self.addr, self.raw)
+
+    def delete(self):
+        """Delete this data node."""
+        # With ordinary nodes you need to update the starting address if the
+        # first child node is deleted. With data the only time we'd be deleting
+        # child nodes is when we're deleting all child nodes so I don't believe
+        # this is necessary.
+
+        # Fill the node so it is not considered an oprhan
+        self.raw = array('B', '\xff'*132)
+        self.write()
+
 
 class _ParentNodes(object):
     """Parent node iterator.
@@ -584,6 +601,6 @@ class _ChildNodes(object):
         # nodes use .next_data_addr
         if self._parent.flags & 0xC000 == PARENT_NODE:
             self.next_addr = self.current_node.next_child_addr
-        elif self._parent.flags & 0xC000 == DATA_NODE:
+        elif self._parent.flags & 0xC000 == PARENT_DATA:
             self.next_addr = self.current_node.next_data_addr
         return self.current_node
