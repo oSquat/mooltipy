@@ -326,13 +326,13 @@ class ParentNode(Node):
     def delete(self):
         """Delete a parent node."""
 
-
         # Delete all children belonging to our node
         for cnode in self.child_nodes():
             cnode.delete()
 
         if self.prev_parent_addr == 0:
             # If deleting the first node in our linked list
+            # TODO: Branch on node type [login|data] and call accordingly
             self._parent.set_starting_parent(self.next_parent_addr)
         else:
             prev_node = self._parent.read_node(self.prev_parent_addr)
@@ -452,12 +452,12 @@ class ChildNode(Node):
             next_child_node.prev_child_addr = self.prev_child_addr
             next_child_node.write()
 
-        # Zero/fill the node so it is not considered an oprhan
+        # Fill the node so it is not considered an oprhan
         self.raw = array('B', '\xff'*132)
         self.write()
 
 class DataNode(Node):
-    """Represent a data node.
+    """Represent a data [child] node.
 
     Inherits Node.
     """
@@ -500,8 +500,7 @@ class _ParentNodes(object):
             node_type = [login|data]
             parent = Reference to parent object (i.e. Mooltipass)
         """
-        # TODO: Allow None and iterate all nodes starting at 0; identify type
-        #   of node with self.node_type?
+        # TODO: Allow None and iterate all nodes starting at 0; identify by flags.
         if not node_type in ['login','data']:
             raise RuntimeError('node_type must be \'login\' or \'data\'')
         self._node_type = node_type
@@ -516,7 +515,7 @@ class _ParentNodes(object):
         return self
 
     def next(self):
-        #Python 2 compatibility
+        # Python 2 compatibility
         return self.__next__()
 
     def __next__(self):
