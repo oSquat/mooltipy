@@ -813,9 +813,19 @@ class _Mooltipass(object):
         logging.info('Not yet implemented')
         pass
 
-    def set_starting_data_parent_addr(self):
-        """Set the first address for data nodes. (0xD2)"""
-        pass
+    def _set_starting_data_parent_addr(self, parent_addr):
+        """Set the first address for data nodes. (0xD2)
+
+        Arguments:
+            parent_addr - Parent address to set.
+
+        Return 1 or 0 indicating success or failure.
+        """
+        # firmware expects 2 bytes starting parent address (LSB)
+        self.send_packet(CMD_SET_DN_START_PARENT,
+                array('B', struct.pack('<H', parent_addr)))
+        recv, _ = self.recv_packet()
+        return recv[0]
 
     def end_memory_management(self):
         """End memory management mode. (0xD3)
