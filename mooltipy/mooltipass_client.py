@@ -266,8 +266,8 @@ class Node(object):
         # The 2 bytes after flags is always an address but its use
         # differs by node type:
         #  * ParentNode.prev_parent_addr
-        #  * ChildNode.next_child_addr
-        #  * DataNode.next_addr
+        #  * ChildNode.prev_child_addr
+        #  * DataNode.next_data_addr
         return struct.unpack('<H', self.raw[2:4])[0]
 
     @first_addr.setter
@@ -480,7 +480,7 @@ class DataNode(Node):
     def delete(self):
         """Delete this data node."""
         # With ordinary nodes you need to update the starting address if the
-        # first child node is deleted. With data the only time we'd be deleting
+        # first child node is deleted. With data, the only time we'd be deleting
         # child nodes is when we're deleting all child nodes so I don't believe
         # this is necessary.
 
