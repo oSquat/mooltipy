@@ -324,7 +324,8 @@ class ParentNode(Node):
 
     @property
     def service_name(self):
-        return struct.unpack('<58s', self.raw[8:66])[0].strip('\0')
+        service_name = [c for c in struct.unpack('<58s', self.raw[8:66])[0]]
+        return ''.join(service_name[:service_name.index('\x00')])
 
     @service_name.setter
     def service_name(self, value):
