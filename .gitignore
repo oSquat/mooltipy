@@ -1,6 +1,7 @@
 env*
 *.swp
 *.pyc
+*.bak
 mooltipy.egg-info/
 dist/
 build/
