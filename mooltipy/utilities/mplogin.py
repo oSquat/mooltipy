@@ -132,6 +132,10 @@ def main_options():
             'del',
             help='Delete a context',
             prog=cmd_util+' del')
+    del_parser.add_argument('-u','--username',
+            help = 'optional username for the context',
+            default = '',
+            action = 'store')
     del_parser.add_argument("context", help='specify context (e.g. Lycos.com)')
 
     if not len(sys.argv) > 1:
@@ -256,7 +260,22 @@ def set_context(mooltipass, args):
 
 def del_context(mooltipass, args):
     """Delete a context in its entirety."""
-    raise RuntimeError('Not yet implemented.')
+
+    if not mooltipass.set_context(args.context):
+        raise RuntimeError('That context ({}) does not exist.'.format(args.context))
+
+    mooltipass.start_memory_management()
+
+    for pnode in mooltipass.parent_nodes('login'):
+        if pnode.service_name == args.context:
+            if args.username:
+                for cnode in pnode.child_nodes():
+                    if cnode.login == args.username:
+                        cnode.delete()
+            else:
+                pnode.delete()
+
+    mooltipass.end_memory_management()
 
 def main():
 
