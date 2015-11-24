@@ -261,10 +261,6 @@ class Node(object):
     def flags(self):
         return struct.unpack('<H', self.raw[:2])[0]
 
-    @flags.setter
-    def flags(self, value):
-        pass
-
     @property
     def first_addr(self):
         # The 2 bytes after flags is always an address but its use
@@ -294,10 +290,6 @@ class ParentNode(Node):
     def flags(self):
         return super(ParentNode, self).flags
 
-    @flags.setter
-    def flags(self, value):
-        super(ParentNode, self).flags
-
     @property
     def prev_parent_addr(self):
         return super(ParentNode, self).first_addr
@@ -326,10 +318,6 @@ class ParentNode(Node):
     def service_name(self):
         service_name = [c for c in struct.unpack('<58s', self.raw[8:66])[0]]
         return ''.join(service_name[:service_name.index('\x00')])
-
-    @service_name.setter
-    def service_name(self, value):
-        pass
 
     def __str__(self):
         return "<{}: Address:0x{:x}, PrevParent:0x{:x}, NextParent:0x{:x}, NextChild:0x{:x}, ServiceName:{}>".format(self.__class__.__name__, self.node_addr, self.prev_parent_addr, self.next_parent_addr, self.next_child_addr, self.service_name)
@@ -385,10 +373,6 @@ class ChildNode(Node):
     def flags(self):
         return super(ChildNode, self).flags
 
-    @flags.setter
-    def flags(self, value):
-        super(ChildNode, self).flags
-
     @property
     def prev_child_addr(self):
         return super(ChildNode, self).first_addr
@@ -408,10 +392,6 @@ class ChildNode(Node):
     @property
     def description(self):
         return struct.unpack('<24s', self.raw[6:30])[0].strip('\0')
-
-    @description.setter
-    def description(self, value):
-        pass
 
     @property
     def date_created(self):
@@ -486,17 +466,9 @@ class DataNode(Node):
     def flags(self):
         return super(DataNode, self).flags
 
-    @flags.setter
-    def flags(self, value):
-        super(DataNode, self).flags
-
     @property
     def next_data_addr(self):
         return super(DataNode, self).first_addr
-
-    @next_data_addr.setter
-    def next_data_addr(self, value):
-        super(DataNode, self).first_addr
 
     @property
     def data(self):
