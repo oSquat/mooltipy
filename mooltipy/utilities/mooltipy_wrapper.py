@@ -37,9 +37,9 @@ def main_options():
 
     utility_list = ''
     for key, value in utilities.items():
-        utility_list += ' '*7 + key.upper() + '\t- ' + value.__doc__ + '\n'
+        utility_list += ' '*7 + key + ' ' * (12-len(key)) + '- ' + value.__doc__ + '\n'
 
-    usage = 'Usage: %(prog)s UTILITY <utility arguments & options>\n' + \
+    usage = 'Usage: %(prog)s UTILITY <arguments & options>\n' + \
             'Avalilable utilities:\n' + \
             utility_list
 
