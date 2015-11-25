@@ -149,7 +149,17 @@ def set_context(mooltipass, args):
 
 def del_context(mooltipass, args):
     """Delete a data context."""
-    raise RuntimeError('Not yet implemented.')
+
+    if not mooltipass.set_data_context(args.context):
+        raise RuntimeError('That context ({}) does not exist.'.format(args.context))
+
+    mooltipass.start_memory_management()
+
+    for pnode in mooltipass.parent_nodes('data'):
+        if pnode.service_name == args.context:
+            pnode.delete()
+
+    mooltipass.end_memory_management()
 
 def list_context(mooltipass, args):
     """Display a list of data contexts."""
