@@ -5,8 +5,6 @@
 A [Mooltipass](http://themooltipass.com) Python library and command line
 management utilities.
 
-Under heavy development. This could be called beta quality at the moment.
-
 
 ## Installation & usage
 You can install or upgrade to the lastest stable release of mooltipy using pip.
@@ -20,7 +18,9 @@ $ sudo pip install mooltipy --upgrade
 ```
 
 ### Manage login contexts
-Set login contexts with mooltipy:
+Set, get, list and delete login contexts (login credentials) with mooltipy.
+
+Below is an example of how to add new login contexts.
 
 ```
 # Add or update user_name at example.com with a randomly generated password.
@@ -39,7 +39,17 @@ Get passwords from the Mooltipass. This could be used in a script, for example.
 $ mysql --user root --password=$(mplogin get mysql)
 ```
 
-List contexts stored in the Mooltipass:
+Delete a login or entire context.
+
+```
+# Delete example_user from example.com
+$ mooltipy login del example.com -u example_user
+
+# Erase example.com entirely.
+$ mooltipy login del example.com
+```
+
+List contexts stored in the Mooltipass.
 
 ```
 $ mooltipy login list
@@ -62,6 +72,7 @@ keys and cryptocurrency wallets.
 ```
 $ mooltipy data set ssh_key ~/.ssh/id_rsa
 $ mooltipy data get ssh_key ./restored_key
+$ mooltipy data del ssh_key
 ```
 
 It supports reading from / writing to stdin / stdout for convenience, but this
@@ -120,6 +131,7 @@ of the individual utilities you can:
 $ mooltipy data --help
 $ mooltipy login --help
 $ mooltipy favorites --help
+$ mooltipy parameters --help
 ```
 
 You can also call any of the utilities directly by prefixing *mp* to the name
@@ -129,6 +141,7 @@ of the utility:
 $ mpdata --help
 $ mplogin --help
 $ mpfavorites --help
+$ mpparams --help
 ```
 
 ### Using the Mooltipass module
@@ -147,9 +160,8 @@ if mooltipass is None:
 mootipass.do_some_stuff()
 ```
 
-We'll document more soon, for now check out the MooltipassClient and
-Mooltipass classes to see what's implemented and see each utility as excellent
-examples of how to interact with the device.
+Check out the MooltipassClient and Mooltipass classes to see what's implemented
+and see each utility as excellent examples of how to interact with the device.
 
 ## Support
 Problems, questions, comments, feature requests? We're available in the
