@@ -78,15 +78,15 @@ def set_favorite(mooltipass, args):
         favorite_slot = int(input("Please select a favorite slot(0-13):"))
 
     print('Putting {}:{} in favorite slot {}'.format(
-        ctx_favorite_list[selected_favorite][0].service_name,
-        ctx_favorite_list[selected_favorite][1].login, favorite_slot))
+            ctx_favorite_list[selected_favorite][0].service_name,
+            ctx_favorite_list[selected_favorite][1].login, favorite_slot))
     logging.debug('Parent Addr:0x{:x} Child Addr:0x{:x}'.format(
-        ctx_favorite_list[selected_favorite][0].addr,
-        ctx_favorite_list[selected_favorite][1].addr))
+            ctx_favorite_list[selected_favorite][0].addr,
+            ctx_favorite_list[selected_favorite][1].addr))
 
     mooltipass.set_favorite(favorite_slot,
-                            (ctx_favorite_list[selected_favorite][0].addr,
-                             ctx_favorite_list[selected_favorite][1].addr))
+           (ctx_favorite_list[selected_favorite][0].addr,
+           ctx_favorite_list[selected_favorite][1].addr))
 
 def del_favorite(mooltipass, args):
     """Removes a favorite from the specified slot"""

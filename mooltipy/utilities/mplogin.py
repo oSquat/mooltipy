@@ -92,7 +92,7 @@ def main_options():
                    'password to be promted at runtime for the password (ok ' + \
                    'method); set this option and specify a password at the ' + \
                    'same time on the command line (terrble method unless ' + \
-                   'your scripting)',
+                   'you\'re scripting)',
             nargs = '?',
             default = None,             # Set if -p not present
             const = '',                 # Set if -p present with no argument
