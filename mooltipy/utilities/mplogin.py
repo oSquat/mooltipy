@@ -57,15 +57,24 @@ def main_options():
 
     # get
     # ---
+    description = 'Return the password through stdout for a given context & ' \
+            'login.'
     get_parser = subparsers.add_parser(
             'get',
             help = 'Get a password for given context',
+            description = description,
             prog = cmd_util+' get')
+    # TODO: accept username as an argument
+    #get_parser.add_argument('-u','--username',
+    #        help = 'optional username for the context',
+    #        default = '',
+    #        action = 'store')
     get_parser.add_argument("context", help='specify context (e.g. Lycos.com)')
 
     # set
     # ---
-    description = 'Examples:\n' + \
+    description = 'Create or modify a login context (e.g. credentials for example.com).\n\n' \
+            'Examples:\n' \
             '\t# Set a random passord for user_name at the example.com context' \
             '\n\t$ {cmd_util} set login example.com -u user_name\n\n' \
             '\t# Set an alphanumeric password for user_name at the exemple.com context' \
@@ -124,32 +133,36 @@ def main_options():
             help = 'Append to the Password a tab or crlf',
             action = 'store',
             choices = ['tab','crlf'])
-    set_parser.add_argument("context", help='specify context (e.g. geociticies.com)')
+    set_parser.add_argument("context", help='specify context (e.g. geocities.com)')
 
     # delete
     # ------
+    description = 'Delete a context or specific login from a context.'
     del_parser = subparsers.add_parser(
             'del',
             help='Delete a context',
-            prog=cmd_util+' del')
+            description = description,
+            prog = cmd_util+' del')
     del_parser.add_argument('-u','--username',
             help = 'optional username for the context',
             default = '',
             action = 'store')
-    del_parser.add_argument("context", help='specify context (e.g. Lycos.com)')
+    del_parser.add_argument("context", help='specify context (e.g. tripod.com)')
 
     # list
     # ----
+    description = 'List login contexts contained in the mooltipass.'
     list_parser = subparsers.add_parser(
             'list',
-            help='List login contexts',
-            prog=cmd_util + ' list')
+            help = 'List login contexts',
+            description = description,
+            prog = cmd_util+' list')
     list_parser.add_argument(
             'context',
-            action='store',
-            default='*',
-            nargs='?',
-            help='supports shell-style wildcards; default is "*"')
+            action = 'store',
+            default = '*',
+            nargs = '?',
+            help = 'supports shell-style wildcards; default is "*", showing all contexts.')
 
     if not len(sys.argv) > 1:
         parser.print_help()
@@ -171,7 +184,7 @@ def get_context(mooltipass, args):
     if set_context == False:
         raise RuntimeError('Context unknown. Use list action to see available contexts')
     if set_context is None:
-        raise RuntimeError('Log into the mooltipass and try again.')
+        raise RuntimeError('Unlock the mooltipass and try again.')
 
     # Try to get password; 0 means there are multiple logins for this context
     password = mooltipass.get_password()
