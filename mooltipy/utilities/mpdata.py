@@ -40,7 +40,7 @@ def main_options():
     # Create a string to represent the utility in help messages
     cmd_util = (' '.join([os.path.split(sys.argv[0])[1], util])).strip()
 
-    description = '{cmd_util} manages Mooltipass data contexts.'.format(
+    description = 'Manages mooltipass data contexts.'.format(
             cmd_util = cmd_util)
     usage = '{cmd_util} [-h] ... {{get,set,del,list}} context'.format(
             cmd_util = cmd_util)
@@ -54,21 +54,36 @@ def main_options():
 
     # get
     # ---
+    description = 'Retrieve data from a data context.'
     get_parser = subparsers.add_parser(
             'get',
-            help = 'Retrieve data for a given context',
+            help = 'retrieve data for a given context',
+            description = description,
             prog = cmd_util+' get')
     get_parser.add_argument('context', help='specify context')
     get_parser.add_argument('filepath',
             nargs = '?',
             default = None,
-            help = 'file to which data should be written')
+            help = 'file to which data should be written, if no file is '
+                    ' specified data is written to stdout')
 
     # set
     # ---
+    description = 'Create a new context to store data.\n\n' \
+            'Examples:\n' \
+            '\t# Create a data context called ssh_key and import key\n' \
+            '\t$ {cmd_util} set ssh_key ~/.ssh/id_rsa\n\n' \
+            '\t# Restore ssh_key to ./restored_key\n' \
+            '\t$ {cmd_util} get ssh_key ./restored_key\n\n' \
+            '\t# Read from / write to stdin / stdout\n' \
+            '\t$ echo "this-is-a-secure-api-key" | {cmd_util} set example-api-key\n' \
+            '\t$ echo $({cmd_util} get example-api-key)\n' \
+            '\t  this-is-a-secure-api-key'
     set_parser = subparsers.add_parser(
             'set',
-            help = 'Create and import data into a data context',
+            help = 'create and import data into a data context',
+            description = description.format(cmd_util = cmd_util),
+            formatter_class = argparse.RawDescriptionHelpFormatter,
             prog = cmd_util+' set')
     set_parser.add_argument('context', help='specify context')
     set_parser.add_argument('filepath',
@@ -78,28 +93,32 @@ def main_options():
 
     # delete
     # ------
+    description = 'Delete a mooltipass data context.'
     del_parser = subparsers.add_parser(
             'del',
-            help='Delete a context',
-            prog=cmd_util+' del')
+            help = 'delete a context',
+            description = description,
+            prog = cmd_util+' del')
     del_parser.add_argument("context", help='specify context')
+
+    # list
+    # ----
+    description = 'List data contexts stored in the mooltipass.'
+    list_parser = subparsers.add_parser(
+            'list',
+            help = 'list login contexts',
+            description = description,
+            prog = cmd_util + ' list')
+    list_parser.add_argument(
+            'context',
+            action = 'store',
+            default = '*',
+            nargs = '?',
+            help='supports shell-style wildcards; default is "*" showing all contexts')
 
     if not len(sys.argv) > 1:
         parser.print_help()
         sys.exit(0)
-
-    # list
-    # ----
-    list_parser = subparsers.add_parser(
-            'list',
-            help='List login contexts',
-            prog=cmd_util + ' list')
-    list_parser.add_argument(
-            'context',
-            action='store',
-            default='*',
-            nargs='?',
-            help='supports shell-style wildcards; default is "*"')
 
     # end subparsers
     args = parser.parse_args()
