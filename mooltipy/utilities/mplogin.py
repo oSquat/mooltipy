@@ -138,10 +138,6 @@ def main_options():
             action = 'store')
     del_parser.add_argument("context", help='specify context (e.g. Lycos.com)')
 
-    if not len(sys.argv) > 1:
-        parser.print_help()
-        sys.exit(0)
-
     # list
     # ----
     list_parser = subparsers.add_parser(
@@ -154,6 +150,10 @@ def main_options():
             default='*',
             nargs='?',
             help='supports shell-style wildcards; default is "*"')
+
+    if not len(sys.argv) > 1:
+        parser.print_help()
+        sys.exit(0)
 
     # end subparsers
     args = parser.parse_args()
