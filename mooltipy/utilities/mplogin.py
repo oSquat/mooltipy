@@ -47,9 +47,6 @@ def main_options():
 
     # main
     parser = argparse.ArgumentParser(usage = usage, description=description)
-    # TODO: Necessary -q -v -f options? Maybe with read / delete.
-    #parser.add_argument('-q','--quiet', action='store_true',
-    #        help='suppress output and warnings)
 
     # subparser
     subparsers = parser.add_subparsers(
@@ -61,7 +58,7 @@ def main_options():
             'login.'
     get_parser = subparsers.add_parser(
             'get',
-            help = 'Get a password for given context',
+            help = 'get a password for given context',
             description = description,
             prog = cmd_util+' get')
     # TODO: accept username as an argument
@@ -86,7 +83,7 @@ def main_options():
 
     set_parser = subparsers.add_parser(
             'set',
-            help = 'Set or update a context',
+            help = 'set or update a context',
             description = description.format(cmd_util=cmd_util),
             formatter_class = argparse.RawDescriptionHelpFormatter,
             prog = cmd_util+' set')
@@ -125,12 +122,12 @@ def main_options():
             action='store')
     set_parser.add_argument(
             '-au',
-            help = 'Append to the Username a tab or crlf',
+            help = 'append to the Username a tab or crlf',
             action = 'store',
             choices = ['tab','crlf'])
     set_parser.add_argument(
             '-ap',
-            help = 'Append to the Password a tab or crlf',
+            help = 'append to the Password a tab or crlf',
             action = 'store',
             choices = ['tab','crlf'])
     set_parser.add_argument("context", help='specify context (e.g. geocities.com)')
@@ -140,7 +137,7 @@ def main_options():
     description = 'Delete a context or specific login from a context.'
     del_parser = subparsers.add_parser(
             'del',
-            help='Delete a context',
+            help='delete a context',
             description = description,
             prog = cmd_util+' del')
     del_parser.add_argument('-u','--username',
@@ -154,7 +151,7 @@ def main_options():
     description = 'List login contexts contained in the mooltipass.'
     list_parser = subparsers.add_parser(
             'list',
-            help = 'List login contexts',
+            help = 'list login contexts',
             description = description,
             prog = cmd_util+' list')
     list_parser.add_argument(
@@ -162,7 +159,7 @@ def main_options():
             action = 'store',
             default = '*',
             nargs = '?',
-            help = 'supports shell-style wildcards; default is "*", showing all contexts.')
+            help = 'supports shell-style wildcards; default is "*" showing all contexts.')
 
     if not len(sys.argv) > 1:
         parser.print_help()

@@ -127,7 +127,7 @@ def main_options():
     # ---
     get_parser = subparsers.add_parser(
             'get',
-            help = 'Get a favorite or favorites',
+            help = 'get a favorite or favorites',
             prog = cmd_util+' get')
     get_parser.add_argument("favorite_slot", help='specify context (e.g. Lycos.com)', choices=range(0,14), type=int)
 
@@ -135,14 +135,14 @@ def main_options():
     # ---
     set_parser = subparsers.add_parser(
             'set',
-            help = 'Set or update a favorite',
+            help = 'set or update a favorite',
             prog = cmd_util+' set')
 
     # delete
     # ------
     del_parser = subparsers.add_parser(
             'del',
-            help='Delete a favorite',
+            help='delete a favorite',
             prog=cmd_util+' del')
     del_parser.add_argument("favorite_slot", type=int, help='specify context (e.g. Lycos.com)', choices=range(0,14))
 
@@ -150,7 +150,7 @@ def main_options():
     # ----
     list_parser = subparsers.add_parser(
             'list',
-            help = 'List all favorites',
+            help = 'list all favorites',
             prog = cmd_util+' list')
 
     if not len(sys.argv) > 1:

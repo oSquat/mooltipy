@@ -79,15 +79,17 @@ def main_options():
     # ---
     get_parser = subparsers.add_parser(
             'get',
-            help = 'Get a favorite or favorites',
+            help = 'get a favorite or favorites',
             prog = cmd_util+' get')
     get_parser.add_argument("param", help='Which parameter to get', choices=MooltipassClient.valid_params.keys())
 
     # set
     # ---
+    description = 'Set parameters on the mooltipass. Use 1 & 0 for True & False.'
     set_parser = subparsers.add_parser(
             'set',
-            help = 'Set or update a favorite',
+            help = 'set or update a favorite',
+            description = description,
             prog = cmd_util+' set')
     set_parser.add_argument("param", help='Which parameter to set', choices=MooltipassClient.valid_params.keys())
     set_parser.add_argument("value", help='Value to set for a parameter', type=auto_int)
@@ -96,7 +98,7 @@ def main_options():
     # ----
     list_parser = subparsers.add_parser(
             'list',
-            help = 'List the current value of all known parameters',
+            help = 'list the current value of all known parameters',
             prog = cmd_util+' list')
 
     if not len(sys.argv) > 1:
