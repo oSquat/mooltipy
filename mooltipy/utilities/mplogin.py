@@ -87,7 +87,7 @@ def main_options():
     set_parser = subparsers.add_parser(
             'set',
             help = 'Set or update a context',
-            description = description,
+            description = description.format(cmd_util=cmd_util),
             formatter_class = argparse.RawDescriptionHelpFormatter,
             prog = cmd_util+' set')
     set_parser.add_argument('-u','--username',
