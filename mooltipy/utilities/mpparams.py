@@ -26,7 +26,7 @@ import time
 from mooltipy.mooltipass_client import MooltipassClient
 
 def get_param(mooltipass, args):
-    value = mooltipass.get_param(mooltipass.valid_params[args.param])
+    value = mooltipass.get_param(mooltipass.valid_params[args.param].param)
     print("Current value of {}: {}".format(args.param, value))
 
 def set_param(mooltipass, args):
