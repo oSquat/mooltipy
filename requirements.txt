@@ -1,2 +1,2 @@
 pycrypto==2.6.1
-pyusb==1.0.0b2
+pyusb>=1.0.0b2
