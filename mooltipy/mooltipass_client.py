@@ -446,7 +446,7 @@ class ChildNode(Node):
             prev_child_node.write()
 
         # If there is a next_child_node, its prev_child_addr must be updated
-        if self.next_child_addr <> 0:
+        if self.next_child_addr != 0:
             next_child_node = self._parent._parent.read_node(self.next_child_addr, self._parent)
             next_child_node.prev_child_addr = self.prev_child_addr
             next_child_node.write()
