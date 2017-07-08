@@ -67,6 +67,12 @@ def main_options():
     #        default = '',
     #        action = 'store')
     get_parser.add_argument("context", help='specify context (e.g. Lycos.com)')
+    get_parser.add_argument(
+        '-w', '--with-username',
+        help = 'Return username on first line, password on second.',
+        dest = 'username',
+        default = False,
+        action = 'store_true')
 
     # set
     # ---
@@ -184,11 +190,14 @@ def get_context(mooltipass, args):
         raise RuntimeError('Unlock the mooltipass and try again.')
 
     # Try to get password; 0 means there are multiple logins for this context
+    username = None
     password = mooltipass.get_password()
     if password == 0:
-        mooltipass.get_login()
+        username = mooltipass.get_login()
 
     password = mooltipass.get_password()
+    if args.username:
+        print(username)
     print(password)
 
 def list_context(mooltipass, args):
