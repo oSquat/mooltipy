@@ -103,24 +103,38 @@ keyboard layout or enabling offline mode.
 ```
 $ mooltipy parameters set offline_mode 1
 $ mooltipy parameters list
-Current Mooltipass Parameters
------------------------------
-flash_screen        : True
-keyboard_layout     : 0x92
-lock_timeout        : 60
-lock_timeout_enable : False
-offline_mode        : True
-screen_saver_speed  : 15
-screensaver         : False
-touch_charge_time   : 0
-touch_di            : 6
-touch_prox_os       : 0x73
-touch_wheel os_0    : 0x21
-touch_wheel os_1    : 0x21
-touch_wheel os_2    : 0x21
-tutorial            : False
-user_intr_timer     : 15
-user_req_cancel     : False
+Parameter           : init : current
+--------------------------------------
+after_login         : 0x2b : 0x2b
+after_login_enable  : 1    : True
+after_pass          : 0x28 : 0x28
+after_pass_enable   : 1    : True
+flash_screen        : 1    : True
+hash_display_enable : 1    : True
+invert_screen       : 0    : False
+key_delay           : 5    : 5
+key_delay_enable    : 1    : False
+keyboard_layout     : 0x92 : 0x92
+knock_enable        : 1    : True
+knock_threshold     : 8    : 8
+led_anim_mask       : 0xff : 0xff
+lock_enable         : 1    : True
+lock_timeout        : 60   : 60
+lock_timeout_enable : 0    : False
+lut_boot            : 1    : True
+offline_mode        : 0    : False
+oled_contrast       : 0x80 : 0x80
+random_init_pin     : 0    : False
+screen_saver_speed  : 15   : 15
+screensaver         : 0    : False
+touch_charge_time   : 0    : 0
+touch_di            : 6    : 6
+touch_prox_os       : 0x73 : 0x73
+touch_wheel os_0    : 0x21 : 0x21
+touch_wheel os_1    : 0x21 : 0x21
+touch_wheel os_2    : 0x21 : 0x21
+tutorial            : 1    : False
+user_intr_timer     : 15   : 15
 ```
 
 ### Mooltipy is a wrapper

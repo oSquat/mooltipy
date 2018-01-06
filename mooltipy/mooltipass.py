@@ -33,7 +33,7 @@ from .constants import *
 from collections import namedtuple
 
 MooltipassParam = namedtuple("MooltipassParam",
-                             "param, formatter, allowed_range")
+                             "param, formatter, allowed_range, default_value")
 
 # Uncomment for lots of debugging
 #logging.basicConfig(level=logging.DEBUG)
@@ -48,23 +48,38 @@ class _Mooltipass(object):
 
     # dictionary of all valid mooltipass parameters and their internal mapping
     valid_params = {
-            'keyboard_layout'    : MooltipassParam(KEYBOARD_LAYOUT_PARAM, hex, range(128+18, 128+39)),
-            'user_intr_timer'    : MooltipassParam(USER_INTER_TIMEOUT_PARAM, int, range(0, 0xFF)),
-            'lock_timeout_enable': MooltipassParam(LOCK_TIMEOUT_ENABLE_PARAM, bool, [0, 1]),
-            'lock_timeout'       : MooltipassParam(LOCK_TIMEOUT_PARAM, int, range(0, 0xFF)),
-            'touch_di'           : MooltipassParam(TOUCH_DI_PARAM, int, range(0, 0xFF)),
+            'keyboard_layout'    : MooltipassParam(KEYBOARD_LAYOUT_PARAM, hex, range(128+18, 128+39), 0x92),
+            'user_intr_timer'    : MooltipassParam(USER_INTER_TIMEOUT_PARAM, int, range(0, 0xFF), 15),
+            'lock_timeout_enable': MooltipassParam(LOCK_TIMEOUT_ENABLE_PARAM, bool, [0, 1], 0),
+            'lock_timeout'       : MooltipassParam(LOCK_TIMEOUT_PARAM, int, range(0, 0xFF), 60),
+            'touch_di'           : MooltipassParam(TOUCH_DI_PARAM, int, range(0, 0xFF), 6),
             # TOUCH_WHEEL_OS_PARAM_OLD - Not used anymore
-            'touch_prox_os'      : MooltipassParam(TOUCH_PROX_OS_PARAM, hex, range(0, 0xFF)),
-            'offline_mode'       : MooltipassParam(OFFLINE_MODE_PARAM, bool, [0, 1]),
-            'screensaver'        : MooltipassParam(SCREENSAVER_PARAM, bool, [0, 1]),
-            'touch_charge_time'  : MooltipassParam(TOUCH_CHARGE_TIME_PARAM, int, range(0, 0xFF)),
-            'touch_wheel os_0'   : MooltipassParam(TOUCH_WHEEL_OS_PARAM0, hex, range(0, 0xFF)),
-            'touch_wheel os_1'   : MooltipassParam(TOUCH_WHEEL_OS_PARAM1, hex, range(0, 0xFF)),
-            'touch_wheel os_2'   : MooltipassParam(TOUCH_WHEEL_OS_PARAM2, hex, range(0, 0xFF)),
-            'flash_screen'       : MooltipassParam(FLASH_SCREEN_PARAM, bool, [0, 1]),
-            'user_req_cancel'    : MooltipassParam(USER_REQ_CANCEL_PARAM, bool, [0, 1]),
-            'tutorial'           : MooltipassParam(TUTORIAL_BOOL_PARAM, bool, [0, 1]),
-            'screen_saver_speed' : MooltipassParam(SCREEN_SAVER_SPEED_PARAM, int, range(0, 0xFF))
+            'touch_prox_os'      : MooltipassParam(TOUCH_PROX_OS_PARAM, hex, range(0, 0xFF), 0x73),
+            'offline_mode'       : MooltipassParam(OFFLINE_MODE_PARAM, bool, [0, 1], 0),
+            'screensaver'        : MooltipassParam(SCREENSAVER_PARAM, bool, [0, 1], 0),
+            'touch_charge_time'  : MooltipassParam(TOUCH_CHARGE_TIME_PARAM, int, range(0, 0xFF), 0),
+            'touch_wheel os_0'   : MooltipassParam(TOUCH_WHEEL_OS_PARAM0, hex, range(0, 0xFF), 0x21),
+            'touch_wheel os_1'   : MooltipassParam(TOUCH_WHEEL_OS_PARAM1, hex, range(0, 0xFF), 0x21),
+            'touch_wheel os_2'   : MooltipassParam(TOUCH_WHEEL_OS_PARAM2, hex, range(0, 0xFF), 0x21),
+            'flash_screen'       : MooltipassParam(FLASH_SCREEN_PARAM, bool, [0, 1], 1),
+            # USER_REQ_CANCEL_PARAM - Not used anymore
+            'tutorial'           : MooltipassParam(TUTORIAL_BOOL_PARAM, bool, [0, 1], 1),
+            'screen_saver_speed' : MooltipassParam(SCREEN_SAVER_SPEED_PARAM, int, range(0, 0xFF), 15),
+            'lut_boot'           : MooltipassParam(LUT_BOOT_POPULATING_PARAM, bool, [0, 1], 1),
+            'after_login_enable' : MooltipassParam(KEY_AFTER_LOGIN_SEND_BOOL_PARAM, bool, [0, 1], 1),
+            'after_login'        : MooltipassParam(KEY_AFTER_LOGIN_SEND_PARAM, hex, range(0, 0xFF), 0x2B),
+            'after_pass_enable'  : MooltipassParam(KEY_AFTER_PASS_SEND_BOOL_PARAM, bool, [0, 1], 1),
+            'after_pass'         : MooltipassParam(KEY_AFTER_PASS_SEND_PARAM, hex, range(0, 0xFF), 0x28),
+            'key_delay_enable'   : MooltipassParam(DELAY_AFTER_KEY_ENTRY_BOOL_PARAM, bool, [0, 1], 1),
+            'key_delay'          : MooltipassParam(DELAY_AFTER_KEY_ENTRY_PARAM, int, range(0, 0xFF), 5),
+            'invert_screen'      : MooltipassParam(INVERTED_SCREEN_AT_BOOT_PARAM, bool, [0, 1], 0),
+            'oled_contrast'      : MooltipassParam(MINI_OLED_CONTRAST_CURRENT_PARAM, hex, range(0, 0xFF), 0x80),
+            'led_anim_mask'      : MooltipassParam(MINI_LED_ANIM_MASK_PARAM, hex, range(0, 0xFF), 0xFF),
+            'knock_enable'       : MooltipassParam(MINI_KNOCK_DETECT_ENABLE_PARAM, bool, [0, 1], 1),
+            'knock_threshold'    : MooltipassParam(MINI_KNOCK_THRES_PARAM, int, range(0, 0xFF), 8),
+            'lock_enable'        : MooltipassParam(LOCK_UNLOCK_FEATURE_PARAM, bool, [0, 1], 1),
+            'hash_display_enable': MooltipassParam(HASH_DISPLAY_FEATURE_PARAM, bool, [0, 1], 1),
+            'random_init_pin'    : MooltipassParam(RANDOM_INIT_PIN_PARAM, bool, [0, 1], 0)
             }
 
     _PKT_LEN_INDEX = 0x00
