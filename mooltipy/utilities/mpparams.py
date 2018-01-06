@@ -38,11 +38,11 @@ def set_param(mooltipass, args):
         print("Failed to set parameter {} to {}".format(mooltipass.valid_params[args.param], args.value))
 
 def list_params(mooltipass, args):
-    print("Current Mooltipass Parameters")
-    print("-----------------------------")
+    print("Parameter           : init : current")
+    print("--------------------------------------")
     for param_name, param in sorted(mooltipass.valid_params.iteritems()):
         value = mooltipass.get_param(param.param)
-        print("{:<20}: {}".format(param_name, param.formatter(value)))
+        print("{:<20}: {:<5}: {}".format(param_name, param.formatter(param.default_value), param.formatter(value)))
 
 def auto_int(x):
     return int(x, 0)
