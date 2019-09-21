@@ -132,18 +132,6 @@ def main():
         print('Mooltipass did not reply to a ping request!')
         sys.exit(1)
 
-    # Ensure Mooltipass status
-    quiet_bool = False
-    while True:
-        status = mooltipass.get_status()
-        if status == 5:
-            break
-        if not quiet_bool:
-            print('Insert a card and unlock the Mooltipass...')
-        quiet_bool = True
-        time.sleep(1)
-    quiet_bool = False
-
     command_handlers[args.command](mooltipass, args)
 
     sys.exit(0)
