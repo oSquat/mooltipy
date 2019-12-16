@@ -48,6 +48,13 @@ def main_options():
     # main
     parser = argparse.ArgumentParser(usage = usage, description=description)
 
+    parser.add_argument('-sme', '--skip_mgmt_enter',
+                        help='Skip entering management mode',
+                        action='store_true')
+    parser.add_argument('-smx', '--skip_mgmt_exit',
+                        help='Skip exiting management mode',
+                        action='store_true')
+
     # subparser
     subparsers = parser.add_subparsers(
             dest = 'command', help='action to take on context')
@@ -202,7 +209,8 @@ def get_context(mooltipass, args):
 
 def list_context(mooltipass, args):
     """List login contexts"""
-    mooltipass.start_memory_management()
+    if args.skip_mgmt_enter == False:
+        mooltipass.start_memory_management()
 
     s = '{:<40}{:<40}\n'.format('Context:','Login(s):')
     s += '{:<40}{:<40}\n'.format('--------','---------')
@@ -214,7 +222,8 @@ def list_context(mooltipass, args):
                 service_name = ''
 
     print(s)
-    mooltipass.end_memory_management()
+    if args.skip_mgmt_exit == False:
+        mooltipass.end_memory_management()
 
 def generate_random_password(args):
     """Generate and return a random password."""
@@ -283,7 +292,8 @@ def del_context(mooltipass, args):
     if not mooltipass.set_context(args.context):
         raise RuntimeError('That context ({}) does not exist.'.format(args.context))
 
-    mooltipass.start_memory_management()
+    if args.skip_mgmt_enter == False:
+        mooltipass.start_memory_management()
 
     for pnode in mooltipass.parent_nodes('login'):
         if pnode.service_name == args.context:
@@ -294,7 +304,8 @@ def del_context(mooltipass, args):
             else:
                 pnode.delete()
 
-    mooltipass.end_memory_management()
+    if args.skip_mgmt_exit == False:
+        mooltipass.end_memory_management()
 
 def main():
 
