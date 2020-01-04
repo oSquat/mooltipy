@@ -432,7 +432,7 @@ class _Mooltipass(object):
 
         Return 1 or 0 indicating success or failure.
         """
-        # TODO: Where are paremeters documented?
+        # TODO: Where are parameters documented?
         logging.info('Not yet implemented')
         pass
 
@@ -636,7 +636,7 @@ class _Mooltipass(object):
         """
         logging.info('Not yet implemented')
         # CPZ should be returned... presumably in 32 byte chunks in a
-        # fashion simliar to reading data until 0x00 is encountered.
+        # fashion similar to reading data until 0x00 is encountered.
         # Mooltipass returns just 0x00 on error.
         pass
 
@@ -681,7 +681,7 @@ class _Mooltipass(object):
                 if data_len == 7:
                     break
         except usb.core.USBError:
-            # Skip timeout once all packets are recieved
+            # Skip timeout once all packets are received
             pass
 
         return recv
@@ -717,7 +717,7 @@ class _Mooltipass(object):
         """Get favorite for current user by slot ID. (0xC7)
 
         Arguments:
-            slot_id -- Slot ID of favorite to retieve.
+            slot_id -- Slot ID of favorite to retrieve.
 
         Return None on error or parent_addr, child_addr tuple (each
         address is 2 bytes).

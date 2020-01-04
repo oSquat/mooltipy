@@ -87,7 +87,7 @@ def main_options():
             'Examples:\n' \
             '\t# Set a random passord for user_name at the example.com context' \
             '\n\t$ {cmd_util} set login example.com -u user_name\n\n' \
-            '\t# Set an alphanumeric password for user_name at the exemple.com context' \
+            '\t# Set an alphanumeric password for user_name at the example.com context' \
             '\n\t$ {cmd_util} set login example.com -u user_name -c alnum\n\n' \
             '\t# Set a password for user_name, but ask for it at runtime ' \
             '\n\t$ {cmd_util} set login example.com -u user_name -p\n\n' \
@@ -108,9 +108,9 @@ def main_options():
             '-p','--password',
             help = 'do not set this option to generate a random password ' + \
                    '(best method); set this option without specifying a ' + \
-                   'password to be promted at runtime for the password (ok ' + \
+                   'password to be prompted at runtime for the password (ok ' + \
                    'method); set this option and specify a password at the ' + \
-                   'same time on the command line (terrble method unless ' + \
+                   'same time on the command line (terrible method unless ' + \
                    'you\'re scripting)',
             nargs = '?',
             default = None,             # Set if -p not present
@@ -244,7 +244,7 @@ def generate_random_password(args):
 def set_context(mooltipass, args):
     """Create context and add or update a username & set the password."""
 
-    # Fixs if password legth is at max 31 chars and appended char requested
+    # Fixes if password length is at max 31 chars and appended char requested
     if args.ap and args.length == 31:
         args.length -= 1
 

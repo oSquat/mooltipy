@@ -40,7 +40,7 @@ def main_options():
         utility_list += ' '*7 + key + ' ' * (12-len(key)) + '- ' + value.__doc__ + '\n'
 
     usage = 'Usage: %(prog)s UTILITY <arguments & options>\n' + \
-            'Avalilable utilities:\n' + \
+            'Available utilities:\n' + \
             utility_list
 
     parser = argparse.ArgumentParser(usage=usage)
