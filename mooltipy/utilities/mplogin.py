@@ -186,6 +186,10 @@ def main_options():
                 args.charset in ['an', 'alnum', 'alphanum', 'alphanumeric']:
             args.charset = 'an'
 
+        # Ask for password if -p was specified
+        if args.password != None and len(args.password) == 0:
+            args.password = getpass.getpass('Enter the password to use:')
+
     return args
 
 def get_context(mooltipass, args):
@@ -247,10 +251,6 @@ def set_context(mooltipass, args):
     # Generate a random password if no -p argument specified
     if args.password is None:
         args.password = generate_random_password(args)
-
-    # Ask for password if -p was specified
-    if len(args.password) == 0:
-        args.password = getpass.getpass('Enter the password to use:')
 
     # append tab/crlf to credentials
     append = {
