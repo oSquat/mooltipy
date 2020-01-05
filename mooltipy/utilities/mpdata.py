@@ -240,7 +240,7 @@ def main():
 
         command_handlers[args.command](mooltipass, args)
         sys.exit(0)
-    except KeyboardInterrupt, SystemExit:
+    except (KeyboardInterrupt, SystemExit):
         print('')
         pass
     except Exception as e:
