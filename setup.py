@@ -21,7 +21,7 @@ setup(
             'Intended Audience :: End Users/Desktop',
     ],
     packages = find_packages(),
-    install_requires = ['pycrypto', 'pyusb==1.0.0b2'],
+    install_requires = ['pyusb>=1.0.0b2'],
     entry_points = {
         'console_scripts': [
             'mooltipy = mooltipy.utilities.mooltipy_wrapper:main',

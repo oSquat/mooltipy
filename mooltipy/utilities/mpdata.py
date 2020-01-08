@@ -48,6 +48,13 @@ def main_options():
     # main
     parser = argparse.ArgumentParser(usage = usage, description=description)
 
+    parser.add_argument('-sme', '--skip_mgmt_enter',
+                        help='Skip entering management mode',
+                        action='store_true')
+    parser.add_argument('-smx', '--skip_mgmt_exit',
+                        help='Skip exiting management mode',
+                        action='store_true')
+
     # subparser
     subparsers = parser.add_subparsers(
             dest = 'command', help='action to take on context')
@@ -172,17 +179,20 @@ def del_context(mooltipass, args):
     if not mooltipass.set_data_context(args.context):
         raise RuntimeError('That context ({}) does not exist.'.format(args.context))
 
-    mooltipass.start_memory_management()
+    if args.skip_mgmt_enter == False:
+        mooltipass.start_memory_management()
 
     for pnode in mooltipass.parent_nodes('data'):
         if pnode.service_name == args.context:
             pnode.delete()
 
-    mooltipass.end_memory_management()
+    if args.skip_mgmt_exit == False:
+        mooltipass.end_memory_management()
 
 def list_context(mooltipass, args):
     """Display a list of data contexts."""
-    mooltipass.start_memory_management()
+    if args.skip_mgmt_enter == False:
+        mooltipass.start_memory_management()
     s = '{:<40}{:<40}\n'.format('Context:','Approximate Size:')
     s += '{:<40}{:<40}\n'.format('--------','----------------')
     for pnode in mooltipass.parent_nodes('data'):
@@ -192,7 +202,8 @@ def list_context(mooltipass, args):
             c += 1
         s += '{:<40}{:<40}\n'.format(service_name, c*128)
     print(s)
-    mooltipass.end_memory_management()
+    if args.skip_mgmt_exit == False:
+        mooltipass.end_memory_management()
 
 def main():
 
@@ -229,7 +240,7 @@ def main():
 
         command_handlers[args.command](mooltipass, args)
         sys.exit(0)
-    except KeyboardInterrupt, SystemExit:
+    except (KeyboardInterrupt, SystemExit):
         print('')
         pass
     except Exception as e:

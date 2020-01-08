@@ -48,6 +48,13 @@ def main_options():
     # main
     parser = argparse.ArgumentParser(usage = usage, description=description)
 
+    parser.add_argument('-sme', '--skip_mgmt_enter',
+                        help='Skip entering management mode',
+                        action='store_true')
+    parser.add_argument('-smx', '--skip_mgmt_exit',
+                        help='Skip exiting management mode',
+                        action='store_true')
+
     # subparser
     subparsers = parser.add_subparsers(
             dest = 'command', help='action to take on context')
@@ -80,7 +87,7 @@ def main_options():
             'Examples:\n' \
             '\t# Set a random passord for user_name at the example.com context' \
             '\n\t$ {cmd_util} set login example.com -u user_name\n\n' \
-            '\t# Set an alphanumeric password for user_name at the exemple.com context' \
+            '\t# Set an alphanumeric password for user_name at the example.com context' \
             '\n\t$ {cmd_util} set login example.com -u user_name -c alnum\n\n' \
             '\t# Set a password for user_name, but ask for it at runtime ' \
             '\n\t$ {cmd_util} set login example.com -u user_name -p\n\n' \
@@ -101,9 +108,9 @@ def main_options():
             '-p','--password',
             help = 'do not set this option to generate a random password ' + \
                    '(best method); set this option without specifying a ' + \
-                   'password to be promted at runtime for the password (ok ' + \
+                   'password to be prompted at runtime for the password (ok ' + \
                    'method); set this option and specify a password at the ' + \
-                   'same time on the command line (terrble method unless ' + \
+                   'same time on the command line (terrible method unless ' + \
                    'you\'re scripting)',
             nargs = '?',
             default = None,             # Set if -p not present
@@ -179,6 +186,10 @@ def main_options():
                 args.charset in ['an', 'alnum', 'alphanum', 'alphanumeric']:
             args.charset = 'an'
 
+        # Ask for password if -p was specified
+        if args.password != None and len(args.password) == 0:
+            args.password = getpass.getpass('Enter the password to use:')
+
     return args
 
 def get_context(mooltipass, args):
@@ -202,7 +213,8 @@ def get_context(mooltipass, args):
 
 def list_context(mooltipass, args):
     """List login contexts"""
-    mooltipass.start_memory_management()
+    if args.skip_mgmt_enter == False:
+        mooltipass.start_memory_management()
 
     s = '{:<40}{:<40}\n'.format('Context:','Login(s):')
     s += '{:<40}{:<40}\n'.format('--------','---------')
@@ -214,7 +226,8 @@ def list_context(mooltipass, args):
                 service_name = ''
 
     print(s)
-    mooltipass.end_memory_management()
+    if args.skip_mgmt_exit == False:
+        mooltipass.end_memory_management()
 
 def generate_random_password(args):
     """Generate and return a random password."""
@@ -231,17 +244,13 @@ def generate_random_password(args):
 def set_context(mooltipass, args):
     """Create context and add or update a username & set the password."""
 
-    # Fixs if password legth is at max 31 chars and appended char requested
+    # Fixes if password length is at max 31 chars and appended char requested
     if args.ap and args.length == 31:
         args.length -= 1
 
     # Generate a random password if no -p argument specified
     if args.password is None:
         args.password = generate_random_password(args)
-
-    # Ask for password if -p was specified
-    if len(args.password) == 0:
-        args.password = getpass.getpass('Enter the password to use:')
 
     # append tab/crlf to credentials
     append = {
@@ -283,7 +292,8 @@ def del_context(mooltipass, args):
     if not mooltipass.set_context(args.context):
         raise RuntimeError('That context ({}) does not exist.'.format(args.context))
 
-    mooltipass.start_memory_management()
+    if args.skip_mgmt_enter == False:
+        mooltipass.start_memory_management()
 
     for pnode in mooltipass.parent_nodes('login'):
         if pnode.service_name == args.context:
@@ -294,7 +304,8 @@ def del_context(mooltipass, args):
             else:
                 pnode.delete()
 
-    mooltipass.end_memory_management()
+    if args.skip_mgmt_exit == False:
+        mooltipass.end_memory_management()
 
 def main():
 
@@ -330,7 +341,7 @@ def main():
 
         command_handlers[args.command](mooltipass, args)
         sys.exit(0)
-    except KeyboardInterrupt, SystemExit:
+    except (KeyboardInterrupt, SystemExit):
         pass
     except Exception as e:
         print('An error occurred: \n{}'.format(e))
@@ -340,6 +351,3 @@ def main():
 if __name__ == '__main__':
 
     main()
-
-    # TODO: Eventually
-    #   * Implement delete
