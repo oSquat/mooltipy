@@ -197,8 +197,7 @@ def main():
         time.sleep(1)
     quiet_bool = False
 
-    if args.skip_mgmt_enter == False:
-        mooltipass.start_memory_management()
+    mooltipass.start_memory_management()
     command_handlers[args.command](mooltipass, args)
     if args.skip_mgmt_exit == False:
         mooltipass.end_memory_management()
