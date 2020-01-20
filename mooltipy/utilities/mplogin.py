@@ -48,9 +48,6 @@ def main_options():
     # main
     parser = argparse.ArgumentParser(usage = usage, description=description)
 
-    parser.add_argument('-sme', '--skip_mgmt_enter',
-                        help='Skip entering management mode',
-                        action='store_true')
     parser.add_argument('-smx', '--skip_mgmt_exit',
                         help='Skip exiting management mode',
                         action='store_true')

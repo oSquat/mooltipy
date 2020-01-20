@@ -116,7 +116,7 @@ def main_options():
     #parser.add_argument('-q','--quiet', action='store_true',
     #        help='suppress output and warnings)
 
-    parser.add_argument('-sme', '--skip_mgmt_enter', help='Skip entering management mode', action='store_true')
+    parser.add_argument('-sme', '--skip_mgmt_enter', help='Unused; skipping management mode entry is automatic', action='store_true')
     parser.add_argument('-smx', '--skip_mgmt_exit', help='Skip exiting management mode', action='store_true')
 
     # subparser
