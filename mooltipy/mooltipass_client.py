@@ -121,6 +121,10 @@ class MooltipassClient(_Mooltipass):
             raise RuntimeError('Cannot enter memory management mode; ' + \
                     'mooltipass not unlocked.')
 
+        # Already in memory management mode if we can get starting parent
+        if super(MooltipassClient, self).get_starting_parent_address():
+            return True
+
         return super(MooltipassClient, self).start_memory_management(timeout)
 
     def write_data_context(self, data, callback=None):
