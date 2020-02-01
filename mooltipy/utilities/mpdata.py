@@ -179,8 +179,7 @@ def del_context(mooltipass, args):
     if not mooltipass.set_data_context(args.context):
         raise RuntimeError('That context ({}) does not exist.'.format(args.context))
 
-    if args.skip_mgmt_enter == False:
-        mooltipass.start_memory_management()
+    mooltipass.start_memory_management()
 
     for pnode in mooltipass.parent_nodes('data'):
         if pnode.service_name == args.context:
@@ -191,8 +190,7 @@ def del_context(mooltipass, args):
 
 def list_context(mooltipass, args):
     """Display a list of data contexts."""
-    if args.skip_mgmt_enter == False:
-        mooltipass.start_memory_management()
+    mooltipass.start_memory_management()
     s = '{:<40}{:<40}\n'.format('Context:','Approximate Size:')
     s += '{:<40}{:<40}\n'.format('--------','----------------')
     for pnode in mooltipass.parent_nodes('data'):

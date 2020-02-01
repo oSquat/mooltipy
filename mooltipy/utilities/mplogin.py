@@ -213,8 +213,7 @@ def get_context(mooltipass, args):
 
 def list_context(mooltipass, args):
     """List login contexts"""
-    if args.skip_mgmt_enter == False:
-        mooltipass.start_memory_management()
+    mooltipass.start_memory_management()
 
     s = '{:<40}{:<40}\n'.format('Context:','Login(s):')
     s += '{:<40}{:<40}\n'.format('--------','---------')
@@ -292,8 +291,7 @@ def del_context(mooltipass, args):
     if not mooltipass.set_context(args.context):
         raise RuntimeError('That context ({}) does not exist.'.format(args.context))
 
-    if args.skip_mgmt_enter == False:
-        mooltipass.start_memory_management()
+    mooltipass.start_memory_management()
 
     for pnode in mooltipass.parent_nodes('login'):
         if pnode.service_name == args.context:
