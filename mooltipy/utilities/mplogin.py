@@ -77,6 +77,12 @@ def main_options():
         dest = 'with_username',
         default = False,
         action = 'store_true')
+    get_parser.add_argument(
+        '-c', '--with-context',
+        help = 'Implies --with-username. Return context on first line, username on second line and password on third.',
+        dest = 'with_context',
+        default = False,
+        action = 'store_true')
 
     # set
     # ---
@@ -205,7 +211,9 @@ def get_context(mooltipass, args):
         username = mooltipass.get_login(args.username)
         password = mooltipass.get_password()
 
-    if args.with_username:
+    if args.with_context:
+        print(args.context)
+    if args.with_username or args.with_context:
         print(username)
     print(password)
 
