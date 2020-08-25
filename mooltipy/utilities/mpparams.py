@@ -40,7 +40,7 @@ def set_param(mooltipass, args):
 def list_params(mooltipass, args):
     print("Parameter           : init : current")
     print("--------------------------------------")
-    for param_name, param in sorted(mooltipass.valid_params.iteritems()):
+    for param_name, param in sorted(iter(mooltipass.valid_params.items())):
         value = mooltipass.get_param(param.param)
         print("{:<20}: {:<5}: {}".format(param_name, param.formatter(param.default_value), param.formatter(value)))
 
