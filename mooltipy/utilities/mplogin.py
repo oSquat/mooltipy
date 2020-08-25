@@ -214,8 +214,8 @@ def get_context(mooltipass, args):
     if args.with_context:
         print(args.context)
     if args.with_username or args.with_context:
-        print(username)
-    print(password)
+        print(username.decode())
+    print(password.decode())
 
 def list_context(mooltipass, args):
     """List login contexts"""
