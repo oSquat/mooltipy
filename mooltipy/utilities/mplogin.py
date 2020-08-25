@@ -66,15 +66,15 @@ def main_options():
             description = description,
             prog = cmd_util+' get')
     # TODO: accept username as an argument
-    #get_parser.add_argument('-u','--username',
-    #        help = 'optional username for the context',
-    #        default = '',
-    #        action = 'store')
+    get_parser.add_argument('-u','--username',
+            help = 'optional username for the context',
+            default = '',
+            action = 'store')
     get_parser.add_argument("context", help='specify context (e.g. Lycos.com)')
     get_parser.add_argument(
         '-w', '--with-username',
         help = 'Return username on first line, password on second.',
-        dest = 'username',
+        dest = 'with_username',
         default = False,
         action = 'store_true')
 
@@ -198,13 +198,14 @@ def get_context(mooltipass, args):
         raise RuntimeError('Unlock the mooltipass and try again.')
 
     # Try to get password; 0 means there are multiple logins for this context
-    username = None
+    # and that --username was not used to specify which one to pick
+    username = mooltipass.get_login(args.username)
     password = mooltipass.get_password()
     if password == 0:
-        username = mooltipass.get_login()
+        username = mooltipass.get_login(args.username)
+        password = mooltipass.get_password()
 
-    password = mooltipass.get_password()
-    if args.username:
+    if args.with_username:
         print(username)
     print(password)
 

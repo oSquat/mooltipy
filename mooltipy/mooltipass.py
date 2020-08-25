@@ -295,12 +295,16 @@ class _Mooltipass(object):
         recv, _ = self.recv_packet(10000)
         return recv[0]
 
-    def get_login(self):
+    def get_login(self, username):
         """Get the login for current context. (0xA4)
 
         Returns the login as a string or 0 on failure.
         """
-        self.send_packet(CMD_GET_LOGIN, None)
+        if username == '':
+            username = None
+        else:
+            username = bytes(username, 'ascii') + b'\x00'
+        self.send_packet(CMD_GET_LOGIN, username)
         recv, data_len = self.recv_packet()
         if recv[0] == 0:
             return 0
