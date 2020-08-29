@@ -412,7 +412,7 @@ class ChildNode(Node):
 
     @property
     def login(self):
-        return struct.unpack('<63s', self.raw[37:100])[0].strip('\0')
+        return struct.unpack('<63s', self.raw[37:100])[0].strip(b'\0')
 
     @login.setter
     def login(self, value):
