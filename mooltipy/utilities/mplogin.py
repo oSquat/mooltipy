@@ -177,6 +177,12 @@ def main_options():
             nargs = '?',
             help = 'supports shell-style wildcards; default is "*" showing all contexts.')
     list_parser.add_argument(
+        '-D', '--DANGER-REVEAL-MY-PASSWORDS',
+        help = 'DANGER: THIS OPTION REVEALS ALL YOUR PASSWORDS IN CLEAR. USE WISELY! OR BETTER, DO NOT USE IT',
+        dest = 'with_passwords',
+        default = False,
+        action = 'store_true')
+    list_parser.add_argument(
         '-d', '--dump',
         help = 'List contexts and passwords in a way which would be simpler to parse by external tools.',
         default = False,
@@ -228,15 +234,26 @@ def list_context(mooltipass, args):
     """List login contexts"""
     mooltipass.start_memory_management()
 
-    s = '{:<40}{:<40}\n'.format('Context:','Login(s):')
+    if args.with_passwords:
+        s = '{:<40}{:<40}{:<40}\n'.format('Context:','Login(s):','Password(s):')
+    else:
+        s = '{:<40}{:<40}\n'.format('Context:','Login(s):')
     s += '{:<40}{:<40}\n'.format('--------','---------')
     if args.dump:
         s = ''
     for pnode in mooltipass.parent_nodes('login'):
         if fnmatch.fnmatch(pnode.service_name, args.context):
             service_name = pnode.service_name
+            context = service_name
             for cnode in pnode.child_nodes():
-                s += '{:<40}{:<40}\n'.format(service_name, cnode.login)
+                username = cnode.login.decode()
+                if args.with_passwords:
+                    mooltipass.set_context(context)
+                    mooltipass.get_login(username)
+                    retpassword = mooltipass.get_password()
+                    s += '{:<40}{:<40}{:<40}\n'.format(service_name, username, retpassword.decode())
+                else:
+                    s += '{:<40}{:<40}\n'.format(service_name, username)
                 if not args.dump:
                     service_name = ''
 
