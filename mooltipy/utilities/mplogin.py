@@ -242,8 +242,8 @@ def list_context(mooltipass, args):
     if args.dump:
         s = ''
     for pnode in mooltipass.parent_nodes('login'):
-        if fnmatch.fnmatch(pnode.service_name, args.context):
-            service_name = pnode.service_name
+        if fnmatch.fnmatch(pnode.service_name.decode(), args.context):
+            service_name = pnode.service_name.decode()
             context = service_name
             for cnode in pnode.child_nodes():
                 username = cnode.login.decode()
