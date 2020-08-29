@@ -320,8 +320,7 @@ class ParentNode(Node):
 
     @property
     def service_name(self):
-        service_name = [c for c in struct.unpack('<58s', self.raw[8:66])[0]]
-        return ''.join(service_name[:service_name.index('\x00')])
+        return struct.unpack('<58s', self.raw[8:66])[0].strip(b'\0')
 
     def __str__(self):
         return "<{}: Address:0x{:x}, PrevParent:0x{:x}, NextParent:0x{:x}, NextChild:0x{:x}, ServiceName:{}>".format(self.__class__.__name__, self.node_addr, self.prev_parent_addr, self.next_parent_addr, self.next_child_addr, self.service_name)
