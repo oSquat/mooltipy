@@ -176,6 +176,13 @@ def main_options():
             default = '*',
             nargs = '?',
             help = 'supports shell-style wildcards; default is "*" showing all contexts.')
+    list_parser.add_argument(
+        '-d', '--dump',
+        help = 'List contexts and passwords in a way which would be simpler to parse by external tools.',
+        default = False,
+        action = 'store_true')
+
+
 
     if not len(sys.argv) > 1:
         parser.print_help()
@@ -223,12 +230,15 @@ def list_context(mooltipass, args):
 
     s = '{:<40}{:<40}\n'.format('Context:','Login(s):')
     s += '{:<40}{:<40}\n'.format('--------','---------')
+    if args.dump:
+        s = ''
     for pnode in mooltipass.parent_nodes('login'):
         if fnmatch.fnmatch(pnode.service_name, args.context):
             service_name = pnode.service_name
             for cnode in pnode.child_nodes():
                 s += '{:<40}{:<40}\n'.format(service_name, cnode.login)
-                service_name = ''
+                if not args.dump:
+                    service_name = ''
 
     print(s)
     if args.skip_mgmt_exit == False:
