@@ -235,10 +235,10 @@ def list_context(mooltipass, args):
     mooltipass.start_memory_management()
 
     if args.with_passwords:
-        s = '{:<40}{:<40}{:<40}\n'.format('Context:','Login(s):','Password(s):')
+        s = '{:<70}{:<70}{:<70}\n'.format('Context:','Login(s):','Password(s):')
     else:
-        s = '{:<40}{:<40}\n'.format('Context:','Login(s):')
-    s += '{:<40}{:<40}\n'.format('--------','---------')
+        s = '{:<70}{:<70}\n'.format('Context:','Login(s):')
+    s += '{:<70}{:<70}\n'.format('--------','---------')
     if args.dump:
         s = ''
     for pnode in mooltipass.parent_nodes('login'):
@@ -251,9 +251,9 @@ def list_context(mooltipass, args):
                     mooltipass.set_context(context)
                     mooltipass.get_login(username)
                     retpassword = mooltipass.get_password()
-                    s += '{:<40}{:<40}{:<40}\n'.format(service_name, username, retpassword.decode())
+                    s += '{:<70}{:<70}{:<70}\n'.format(service_name, username, retpassword.decode())
                 else:
-                    s += '{:<40}{:<40}\n'.format(service_name, username)
+                    s += '{:<70}{:<70}\n'.format(service_name, username)
                 if not args.dump:
                     service_name = ''
 
