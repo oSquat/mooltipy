@@ -66,15 +66,21 @@ def main_options():
             description = description,
             prog = cmd_util+' get')
     # TODO: accept username as an argument
-    #get_parser.add_argument('-u','--username',
-    #        help = 'optional username for the context',
-    #        default = '',
-    #        action = 'store')
+    get_parser.add_argument('-u','--username',
+            help = 'optional username for the context',
+            default = '',
+            action = 'store')
     get_parser.add_argument("context", help='specify context (e.g. Lycos.com)')
     get_parser.add_argument(
         '-w', '--with-username',
         help = 'Return username on first line, password on second.',
-        dest = 'username',
+        dest = 'with_username',
+        default = False,
+        action = 'store_true')
+    get_parser.add_argument(
+        '-c', '--with-context',
+        help = 'Implies --with-username. Return context on first line, username on second line and password on third.',
+        dest = 'with_context',
         default = False,
         action = 'store_true')
 
@@ -170,6 +176,19 @@ def main_options():
             default = '*',
             nargs = '?',
             help = 'supports shell-style wildcards; default is "*" showing all contexts.')
+    list_parser.add_argument(
+        '-D', '--DANGER-REVEAL-MY-PASSWORDS',
+        help = 'DANGER: THIS OPTION REVEALS ALL YOUR PASSWORDS IN CLEAR. USE WISELY! OR BETTER, DO NOT USE IT',
+        dest = 'with_passwords',
+        default = False,
+        action = 'store_true')
+    list_parser.add_argument(
+        '-d', '--dump',
+        help = 'List contexts and passwords in a way which would be simpler to parse by external tools.',
+        default = False,
+        action = 'store_true')
+
+
 
     if not len(sys.argv) > 1:
         parser.print_help()
@@ -198,28 +217,45 @@ def get_context(mooltipass, args):
         raise RuntimeError('Unlock the mooltipass and try again.')
 
     # Try to get password; 0 means there are multiple logins for this context
-    username = None
+    # and that --username was not used to specify which one to pick
+    username = mooltipass.get_login(args.username)
     password = mooltipass.get_password()
     if password == 0:
-        username = mooltipass.get_login()
+        username = mooltipass.get_login(args.username)
+        password = mooltipass.get_password()
 
-    password = mooltipass.get_password()
-    if args.username:
-        print(username)
-    print(password)
+    if args.with_context:
+        print(args.context)
+    if args.with_username or args.with_context:
+        print(username.decode())
+    print(password.decode())
 
 def list_context(mooltipass, args):
     """List login contexts"""
     mooltipass.start_memory_management()
 
-    s = '{:<40}{:<40}\n'.format('Context:','Login(s):')
-    s += '{:<40}{:<40}\n'.format('--------','---------')
+    if args.with_passwords:
+        s = '{:<70}{:<70}{:<70}\n'.format('Context:','Login(s):','Password(s):')
+    else:
+        s = '{:<70}{:<70}\n'.format('Context:','Login(s):')
+    s += '{:<70}{:<70}\n'.format('--------','---------')
+    if args.dump:
+        s = ''
     for pnode in mooltipass.parent_nodes('login'):
-        if fnmatch.fnmatch(pnode.service_name, args.context):
-            service_name = pnode.service_name
+        if fnmatch.fnmatch(pnode.service_name.decode(), args.context):
+            service_name = pnode.service_name.decode()
+            context = service_name
             for cnode in pnode.child_nodes():
-                s += '{:<40}{:<40}\n'.format(service_name, cnode.login)
-                service_name = ''
+                username = cnode.login.decode()
+                if args.with_passwords:
+                    mooltipass.set_context(context)
+                    mooltipass.get_login(username)
+                    retpassword = mooltipass.get_password()
+                    s += '{:<70}{:<70}{:<70}\n'.format(service_name, username, retpassword.decode())
+                else:
+                    s += '{:<70}{:<70}\n'.format(service_name, username)
+                if not args.dump:
+                    service_name = ''
 
     print(s)
     if args.skip_mgmt_exit == False:
