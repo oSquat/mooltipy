@@ -20,8 +20,6 @@
 import argparse
 import os
 import sys
-import logging
-import time
 
 from mooltipy.mooltipass_client import MooltipassClient
 

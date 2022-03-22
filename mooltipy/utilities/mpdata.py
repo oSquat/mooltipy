@@ -113,12 +113,6 @@ def main_options():
             help = 'list login contexts',
             description = description,
             prog = cmd_util + ' list')
-    list_parser.add_argument(
-            'context',
-            action = 'store',
-            default = '*',
-            nargs = '?',
-            help='supports shell-style wildcards; default is "*" showing all contexts')
 
     if not len(sys.argv) > 1:
         parser.print_help()
@@ -225,7 +219,6 @@ def main():
 
     try:
         # Ensure Mooltipass status
-        quiet_bool = False
         if not mooltipass.get_status() == 5:
             print('Insert a card and unlock the Mooltipass or cancel with ctrl-c')
             while True:
@@ -237,7 +230,6 @@ def main():
         sys.exit(0)
     except (KeyboardInterrupt, SystemExit):
         print('')
-        pass
     except Exception as e:
         print('\nAn error occurred: \n{}'.format(e))
     finally:

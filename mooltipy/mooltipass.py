@@ -21,7 +21,6 @@ from array import array
 
 import logging
 import platform
-import random
 import struct
 import sys
 import time
@@ -242,7 +241,7 @@ class _Mooltipass:
         # value.
         #
         # read_node() returns a valid len indicator not counting the cmd byte...
-        #   so subtracting 1 is incorrect, but works in all other cases. 
+        #   so subtracting 1 is incorrect, but works in all other cases.
 
         # Packet len includes the cmd byte, so subtract 1 to match the data len
         return recv[self._DATA_INDEX:], recv[self._PKT_LEN_INDEX]-1
@@ -377,12 +376,10 @@ class _Mooltipass:
     def _set_bootloader_password(self, password):
         """??? (0xAA)"""
         logging.info('Not yet implemented')
-        pass
 
     def _jump_to_bootloader(self):
         """??? (0xAB)"""
         logging.info('Not yet implemented')
-        pass
 
     def get_random_number(self):
         """Get 32 random bytes. (0xAC)"""
@@ -410,7 +407,6 @@ class _Mooltipass:
         Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
-        pass
 
     def _media_import(self, data):
         """Send data to mooltipass. (0xAF)
@@ -422,7 +418,6 @@ class _Mooltipass:
         """
         #TODO: Ask for pointer to source containing formatting!
         logging.info('Not yet implemented')
-        pass
 
     def _end_media_import(self):
         """Request end media to Mooltipass. (0xB0)
@@ -430,7 +425,6 @@ class _Mooltipass:
         Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
-        pass
 
     def _set_mooltipass_parameter(self, param_id, value):
         """Set a mooltipass parameter. (0xB1)
@@ -443,7 +437,6 @@ class _Mooltipass:
         """
         # TODO: Where are parameters documented?
         logging.info('Not yet implemented')
-        pass
 
     def _get_mooltipass_parameter(self, param_id):
         """Retrieve a mooltipass parameter (0xB2).
@@ -454,7 +447,6 @@ class _Mooltipass:
         Returns the parameter value.
         """
         logging.info('Not yet implemented')
-        pass
 
     def _reset_card(self):
         """Reset inserted card. (0xB3)
@@ -462,7 +454,6 @@ class _Mooltipass:
         Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
-        pass
 
     def _read_card_login(self):
         """Read login stored inside smartcard. (0xB4)
@@ -470,7 +461,6 @@ class _Mooltipass:
         Returns login or None.
         """
         logging.info('Not yet implemented')
-        pass
 
     def _read_card_password(self):
         """Read password stored inside the smartcard. (0xB5)
@@ -480,7 +470,6 @@ class _Mooltipass:
         Returns password or None.
         """
         logging.info('Not yet implemented')
-        pass
 
     def _set_card_login(self, login):
         """Set card login stored inside smartcard. (0xB6)
@@ -493,7 +482,6 @@ class _Mooltipass:
         Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
-        pass
 
     def _set_card_password(self, password):
         """Set password stored inside the smartcard. (0xB7)
@@ -506,7 +494,6 @@ class _Mooltipass:
         Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
-        pass
 
     def _add_unknown_smartcard(self, cpz, ctr):
         """Instruct mooltipass to store an unknown smartcard. (0xB8)
@@ -517,7 +504,6 @@ class _Mooltipass:
         Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
-        pass
 
     def get_status(self):
         """Return raw mooltipass status as int. (0xB9)
@@ -539,18 +525,15 @@ class _Mooltipass:
 
     def _set_date(self):
         """Set current date. (0xBB)"""
-        loggin.info('Not yet implemented')
-        pass
+        logging.info('Not yet implemented')
 
     def _set_mooltipass_uid(self):
         """Set the mooltipass UID. (0xBC)"""
-        loggin.info('Not yet implemented')
-        pass
+        logging.info('Not yet implemented')
 
     def _get_mooltipass_uid(self):
         """Get the mooltipass UID. (0xBD)"""
-        loggin.info('Not yet implemented')
-        pass
+        logging.info('Not yet implemented')
 
     def set_data_context(self, context):
         """Set the data context. (0xBE)
@@ -647,7 +630,6 @@ class _Mooltipass:
         # CPZ should be returned... presumably in 32 byte chunks in a
         # fashion similar to reading data until 0x00 is encountered.
         # Mooltipass returns just 0x00 on error.
-        pass
 
     def cancel_user_request(self):
         """Cancel user input request. (0xC3)
@@ -657,7 +639,6 @@ class _Mooltipass:
         always returned.
         """
         self.send_packet(CMD_CANCEL_USER_REQUEST, None)
-        return None
 
     # 0xC4 is reserved for response from Mooltipass.
 
@@ -784,7 +765,6 @@ class _Mooltipass:
         Returns CTR value or None on error.
         """
         logging.info('Not yet implemented')
-        pass
 
     def _set_ctr_value(self, ctr_value):
         """Set new CTR value. (0xCC)
@@ -795,7 +775,6 @@ class _Mooltipass:
         Return 1 or 0 indicating success or failure.
         """
         logging.info('Not yet implemented')
-        pass
 
     def add_cpz_ctr_value(self, cpz, ctr):
         pass
@@ -834,8 +813,6 @@ class _Mooltipass:
         parent_addr = \
             struct.unpack('h', recv[:2])[0]
         return (lambda ret: None if 0 else ret)(parent_addr)
-        logging.info('Not yet implemented')
-        pass
 
     def _set_starting_data_parent_addr(self, parent_addr):
         """Set the first address for data nodes. (0xD2)
