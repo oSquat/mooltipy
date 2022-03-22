@@ -45,7 +45,7 @@ MooltipassParam = namedtuple("MooltipassParam",
 # Uncomment for lots of debugging
 #logging.basicConfig(level=logging.DEBUG)
 
-class _Mooltipass(object):
+class _Mooltipass:
     """Mooltipass -- Outlines access to Mooltipass's USB commands.
 
     This class is designed to be inherited (particularly by

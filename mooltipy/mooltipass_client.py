@@ -43,7 +43,7 @@ class MooltipassClient(_Mooltipass):
     """
 
     def __init__(self):
-        super(MooltipassClient, self).__init__()
+        super().__init__()
         if not self.ping():
             raise RuntimeError('Mooltipass did not respond to ping.')
         version_info = self.get_version()
@@ -55,7 +55,7 @@ class MooltipassClient(_Mooltipass):
 
     @property
     def status(self):
-        return super(MooltipassClient, self).get_status()
+        return super().get_status()
 
     def ping(self):
         """Ping the mooltipass.
@@ -69,7 +69,7 @@ class MooltipassClient(_Mooltipass):
             data.append(random.randint(0,255))
             data.append(random.randint(0,255))
 
-            super(MooltipassClient, self).ping(data)
+            super().ping(data)
 
             recv = None
             while recv is None or \
@@ -78,7 +78,7 @@ class MooltipassClient(_Mooltipass):
                     recv[2] != data[2] or \
                     recv[3] != data[3]:
 
-                recv, _ = super(MooltipassClient, self).recv_packet()
+                recv, _ = super().recv_packet()
 
             logging.debug("Mooltipass replied to our ping message")
             return True
@@ -94,17 +94,17 @@ class MooltipassClient(_Mooltipass):
         None if no card is in the mooltipass.
         """
         resp = {0:False, 1:True, 3:None}
-        return resp[super(MooltipassClient, self).set_context(context)]
+        return resp[super().set_context(context)]
 
     def set_password(self, password):
         """Set password for current context and login.
 
         Return 1 or 0 indicating success or failure.
         """
-        if super(MooltipassClient, self).check_password(password):
+        if super().check_password(password):
             return 0
         else:
-            return super(MooltipassClient, self).set_password(password)
+            return super().set_password(password)
 
     def start_memory_management(self, timeout=20000):
         """Enter memory management mode.
@@ -123,10 +123,10 @@ class MooltipassClient(_Mooltipass):
                     'mooltipass not unlocked.')
 
         # Already in memory management mode if we can get starting parent
-        if super(MooltipassClient, self).get_starting_parent_address():
+        if super().get_starting_parent_address():
             return True
 
-        return super(MooltipassClient, self).start_memory_management(timeout)
+        return super().start_memory_management(timeout)
 
     def write_data_context(self, data, callback=None):
         """Write to mooltipass data context.
@@ -150,7 +150,7 @@ class MooltipassClient(_Mooltipass):
         ext_data = array('B', lod)
         ext_data.extend(data)
 
-        return super(MooltipassClient, self).write_data_context(ext_data, callback)
+        return super().write_data_context(ext_data, callback)
 
     def read_data_context(self, callback=None):
         """Read data from context. 
@@ -163,7 +163,7 @@ class MooltipassClient(_Mooltipass):
         Return data as array or None.
         """
 
-        data = super(MooltipassClient, self).read_data_context(callback)
+        data = super().read_data_context(callback)
         # See write_data_context for explanation of lod
         lod = struct.unpack('>L', data[:4])[0]
         logging.debug('Expecting: ' + str(lod) + ' bytes...')
@@ -183,7 +183,7 @@ class MooltipassClient(_Mooltipass):
                 functions & variables. Optional, and default assumes
                 the parent object is Mooltipassclient.
         """
-        recv = super(MooltipassClient, self).read_node(node_addr)
+        recv = super().read_node(node_addr)
         if parent_weak_ref == None:
             parent_weak_ref = weakref.ref(self)()
         # Use flags to figure out the node type
@@ -201,7 +201,7 @@ class MooltipassClient(_Mooltipass):
 
     def write_node(self, node):
         """Write to a node in memory."""
-        return super(MooltipassClient, self)._write_node(node.addr, node.raw)
+        return super()._write_node(node.addr, node.raw)
 
     def parent_nodes(self, node_type=None):
         """Return a ParentNodes iter.
@@ -226,7 +226,7 @@ class MooltipassClient(_Mooltipass):
         if not parent_addr in valid_addresses:
             raise RuntimeError('Can not set the starting parent to an invalid node address!')
 
-        return super(MooltipassClient, self)._set_starting_parent(parent_addr)
+        return super()._set_starting_parent(parent_addr)
 
     def set_starting_data_parent_addr(self, parent_addr):
         """Set the starting parent node.
@@ -241,10 +241,10 @@ class MooltipassClient(_Mooltipass):
         if not parent_addr in valid_addresses:
             raise RuntimeError('Can not set the starting parent to an invalid node address!')
 
-        return super(MooltipassClient, self)._set_starting_data_parent_addr(parent_addr)
+        return super()._set_starting_data_parent_addr(parent_addr)
 
 
-class Node(object):
+class Node:
     """Parent/Child/Data nodes have some similar, overlapping structure.
 
     The Node class is intended to be inherited by Parent/Child/DataNode classes.
@@ -293,11 +293,11 @@ class ParentNode(Node):
 
     @property
     def flags(self):
-        return super(ParentNode, self).flags
+        return super().flags
 
     @property
     def prev_parent_addr(self):
-        return super(ParentNode, self).first_addr
+        return super().first_addr
 
     @prev_parent_addr.setter
     def prev_parent_addr(self, value):
@@ -375,11 +375,11 @@ class ChildNode(Node):
 
     @property
     def flags(self):
-        return super(ChildNode, self).flags
+        return super().flags
 
     @property
     def prev_child_addr(self):
-        return super(ChildNode, self).first_addr
+        return super().first_addr
 
     @prev_child_addr.setter
     def prev_child_addr(self, value):
@@ -467,11 +467,11 @@ class DataNode(Node):
 
     @property
     def flags(self):
-        return super(DataNode, self).flags
+        return super().flags
 
     @property
     def next_data_addr(self):
-        return super(DataNode, self).first_addr
+        return super().first_addr
 
     @property
     def data(self):
@@ -492,7 +492,7 @@ class DataNode(Node):
         self.write()
 
 
-class _ParentNodes(object):
+class _ParentNodes:
     """Parent node iterator.
 
     Intended to be returned to the user by way of method from
@@ -532,7 +532,7 @@ class _ParentNodes(object):
         return self.current_node
 
 
-class _ChildNodes(object):
+class _ChildNodes:
     """Child [or Data] node iterator.
 
     Intended to be returned to the user by way of method from
