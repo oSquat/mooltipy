@@ -523,10 +523,6 @@ class _ParentNodes(object):
     def __iter__(self):
         return self
 
-    def next(self):
-        # Python 2 compatibility
-        return self.__next__()
-
     def __next__(self):
         if self.next_parent_addr == 0:
             raise StopIteration()
@@ -558,10 +554,6 @@ class _ChildNodes(object):
 
     def __iter__(self):
         return self
-
-    def next(self):
-        #Python 2 compatibility
-        return self.__next__()
 
     def __next__(self):
         if self.next_addr == 0:
