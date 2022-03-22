@@ -20,6 +20,7 @@ import logging
 import weakref
 
 from .mooltipass import _Mooltipass
+from .mooltipass import str_from_array, ENCODING
 
 # Delete me after removing read_all_nodes
 from collections import defaultdict
@@ -320,8 +321,7 @@ class ParentNode(Node):
 
     @property
     def service_name(self):
-        service_name = [c for c in struct.unpack('<58s', self.raw[8:66])[0]]
-        return ''.join(service_name[:service_name.index('\x00')])
+        return str_from_array(self.raw[8:66])
 
     def __str__(self):
         return "<{}: Address:0x{:x}, PrevParent:0x{:x}, NextParent:0x{:x}, NextChild:0x{:x}, ServiceName:{}>".format(self.__class__.__name__, self.node_addr, self.prev_parent_addr, self.next_parent_addr, self.next_child_addr, self.service_name)
@@ -357,7 +357,7 @@ class ParentNode(Node):
             next_node.write()
 
         # Fill node; zero addresses
-        self.raw = array('B', '\xff'*132)
+        self.raw = array('B', b'\xff'*132)
         self.prev_parent_node = 0
         self.next_parent_node = 0
         self.write()
@@ -395,7 +395,7 @@ class ChildNode(Node):
 
     @property
     def description(self):
-        return struct.unpack('<24s', self.raw[6:30])[0].strip('\0')
+        return str_from_array(self.raw[6:30])
 
     @property
     def date_created(self):
@@ -413,19 +413,18 @@ class ChildNode(Node):
 
     @property
     def login(self):
-        return struct.unpack('<63s', self.raw[37:100])[0].strip('\0')
+        return str_from_array(self.raw[37:100])
 
     @login.setter
     def login(self, value):
         if len(value) > 62:
             raise RuntimeError('Login can not exceed 62 characters.')
-        value += ('\x00' * (len(value) - 63))
-        self.raw[37:100] = array('B', struct.pack('<63s', value))
-        pass
+        self.raw[37:100] = array('B',
+                                 struct.pack('<63s', value.encode(ENCODING)))
 
     @property
     def password(self):
-        return struct.unpack('<32s', self.raw[100:132])[0]
+        return str_from_array(self.raw[100:132])
 
     def __str__(self):
         return "<{}: Address:0x{:x} PrevChild:0x{:x} NextChild:0x{:x} Login:{}>".format(self.__class__.__name__, self.node_addr, self.prev_child_addr, self.next_child_addr, self.login)
@@ -456,7 +455,7 @@ class ChildNode(Node):
             next_child_node.write()
 
         # Fill the node so it is not considered an oprhan
-        self.raw = array('B', '\xff'*132)
+        self.raw = array('B', b'\xff'*132)
         self.write()
 
 
@@ -476,7 +475,7 @@ class DataNode(Node):
 
     @property
     def data(self):
-        return struct.unpack('<128s', self.raw[4:132])[0]
+        return self.raw[4:132].tobytes()
 
     def write(self):
         return self._parent._parent._write_node(self.addr, self.raw)
@@ -489,7 +488,7 @@ class DataNode(Node):
         # this is necessary.
 
         # Fill the node so it is not considered an oprhan
-        self.raw = array('B', '\xff'*132)
+        self.raw = array('B', b'\xff'*132)
         self.write()
 
 
