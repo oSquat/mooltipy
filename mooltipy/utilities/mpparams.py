@@ -73,7 +73,7 @@ def main_options():
 
     # subparser
     subparsers = parser.add_subparsers(
-            dest = 'command', help='action to take on context')
+            dest = 'command', help='action to take on context', required=True)
 
     # get
     # ---
