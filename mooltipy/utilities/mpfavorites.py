@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This file is part of Mooltipy.
 #
@@ -24,12 +24,6 @@ import logging
 import time
 
 from mooltipy.mooltipass_client import MooltipassClient
-
-try:
-    input = raw_input
-except NameError:
-    # For python 2/3 compatibility
-    pass
 
 def list_favorites(mooltipass, args):
     favorites = []
@@ -121,7 +115,7 @@ def main_options():
 
     # subparser
     subparsers = parser.add_subparsers(
-            dest = 'command', help='action to take on context')
+            dest = 'command', help='action to take on context', required=True)
 
     # get
     # ---

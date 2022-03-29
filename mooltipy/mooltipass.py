@@ -32,13 +32,20 @@ from .constants import *
 
 from collections import namedtuple
 
+ENCODING = 'ascii'
+def str_from_array(arr):
+    """Retrieve null terminated ASCII string from array."""
+    # Change array to bytes, remove everything after first \0 and
+    # interpret as ASCII:
+    return arr.tobytes().partition(b'\0')[0].decode(ENCODING)
+
 MooltipassParam = namedtuple("MooltipassParam",
                              "param, formatter, allowed_range, default_value")
 
 # Uncomment for lots of debugging
 #logging.basicConfig(level=logging.DEBUG)
 
-class _Mooltipass(object):
+class _Mooltipass:
     """Mooltipass -- Outlines access to Mooltipass's USB commands.
 
     This class is designed to be inherited (particularly by
@@ -194,7 +201,10 @@ class _Mooltipass(object):
                     # Unit sends 0xB9 when user is entering their PIN.
                     break
                 elif recv[self._CMD_INDEX] == CMD_DEBUG:
-                    debug_msg = struct.unpack('{}s'.format(recv[self._PKT_LEN_INDEX]-1), recv[self._DATA_INDEX:recv[self._PKT_LEN_INDEX]+1])[0]
+                    # USB_MESSAGES_FOR_CRITICAL_CALLBACKS appears to not be
+                    # defined in production firmware builds so I was unable
+                    # to test this as part of the Python 3 port.
+                    debug_msg = str_from_array(recv[self._DATA_INDEX:recv[self._PKT_LEN_INDEX]+1])
                     if debug_msg == "#MBE":
                         print("Received Memory Boundary Error Callback!")
                     elif debug_msg == "#NM":
@@ -276,8 +286,7 @@ class _Mooltipass(object):
         """
         self.send_packet(CMD_VERSION, None)
         recv, data_len = self.recv_packet()
-        # TODO: TEST THIS
-        return struct.unpack('<b{}s'.format(data_len-1), recv[0:data_len])
+        return str_from_array(recv[:data_len])
 
     def set_context(self, context):
         """Set mooltipass context. (0xA3)
@@ -291,7 +300,7 @@ class _Mooltipass(object):
             3 -- No card inserted into mooltipass
         """
 
-        self.send_packet(CMD_CONTEXT, array('B', context + b'\x00'))
+        self.send_packet(CMD_CONTEXT, array('B', bytes(context, ENCODING) + b'\x00'))
         recv, _ = self.recv_packet(10000)
         return recv[0]
 
@@ -305,7 +314,7 @@ class _Mooltipass(object):
         if recv[0] == 0:
             return 0
         else:
-            return struct.unpack('<{}s'.format(data_len), recv[:data_len])[0]
+            return str_from_array(recv[:data_len])
 
     def get_password(self):
         """Get the password for current context. (0xA5)
@@ -317,14 +326,14 @@ class _Mooltipass(object):
         if recv[0] == 0:
             return 0
         else:
-            return struct.unpack('<{}s'.format(data_len), recv[:data_len])[0]
+            return str_from_array(recv[:data_len])
 
     def set_login(self, login):
         """Set a login. (0xA6)
 
         Return 1 or 0 indicating success or failure.
         """
-        self.send_packet(CMD_SET_LOGIN, array('B', login + b'\x00'))
+        self.send_packet(CMD_SET_LOGIN, array('B', bytes(login, ENCODING) + b'\x00'))
         recv, _ = self.recv_packet()
         return recv[0]
 
@@ -333,7 +342,7 @@ class _Mooltipass(object):
 
         Return 1 or 0 indicating success or failure.
         """
-        self.send_packet(CMD_SET_PASSWORD, array('B', password + b'\x00'))
+        self.send_packet(CMD_SET_PASSWORD, array('B', bytes(password, ENCODING) + b'\x00'))
         recv, _ = self.recv_packet()
         return recv[0]
 
@@ -349,7 +358,7 @@ class _Mooltipass(object):
         # A timer blocks repeated checking of passwords.
         # A return of 0x02 means the timer is still counting down.
         while recv is None or recv == 0x02:
-            self.send_packet(CMD_CHECK_PASSWORD, array('B', password + b'\x00'))
+            self.send_packet(CMD_CHECK_PASSWORD, array('B', bytes(password, ENCODING) + b'\x00'))
             recv, _ = self.recv_packet()
             recv = recv[0]
             time.sleep(.2)
@@ -361,7 +370,7 @@ class _Mooltipass(object):
 
         Return 1 or 0 indicating success or failure.
         """
-        self.send_packet(CMD_ADD_CONTEXT, array('B', context + b'\x00'))
+        self.send_packet(CMD_ADD_CONTEXT, array('B', bytes(context, ENCODING) + b'\x00'))
         recv, _ = self.recv_packet()
         return recv[0]
 
@@ -548,7 +557,7 @@ class _Mooltipass(object):
 
         Return 1 or 0 indicating success or failure.
         """
-        self.send_packet(CMD_SET_DATA_SERVICE, array('B', context + b'\x00'))
+        self.send_packet(CMD_SET_DATA_SERVICE, array('B', bytes(context, ENCODING) + b'\x00'))
         recv, _ = self.recv_packet()
         return recv[0]
 
@@ -561,7 +570,7 @@ class _Mooltipass(object):
         Return 1 or 0 indicating success or failure.
         """
         print('sending ' + context)
-        self.send_packet(CMD_ADD_DATA_SERVICE, array('B', context + b'\x00'))
+        self.send_packet(CMD_ADD_DATA_SERVICE, array('B', bytes(context, ENCODING) + b'\x00'))
         recv, _ = self.recv_packet()
         return recv[0]
 
