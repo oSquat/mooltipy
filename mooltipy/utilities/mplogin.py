@@ -82,7 +82,7 @@ def main_options():
     # ---
     description = 'Create or modify a login context (e.g. credentials for example.com).\n\n' \
             'Examples:\n' \
-            '\t# Set a random passord for user_name at the example.com context' \
+            '\t# Set a random password for user_name at the example.com context' \
             '\n\t$ {cmd_util} set login example.com -u user_name\n\n' \
             '\t# Set an alphanumeric password for user_name at the example.com context' \
             '\n\t$ {cmd_util} set login example.com -u user_name -c alnum\n\n' \
@@ -326,7 +326,6 @@ def main():
 
     try:
         # Ensure Mooltipass status
-        quiet_bool = False
         if not mooltipass.get_status() == 5:
             print('Insert a card and unlock the Mooltipass or cancel with ctrl-c')
             while True:

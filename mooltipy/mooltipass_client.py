@@ -22,9 +22,6 @@ import weakref
 from .mooltipass import _Mooltipass
 from .mooltipass import str_from_array, ENCODING
 
-# Delete me after removing read_all_nodes
-from collections import defaultdict
-
 PARENT_NODE = 0x0000
 CHILD_NODE = 0x4000
 PARENT_DATA = 0x8000
@@ -110,7 +107,7 @@ class MooltipassClient(_Mooltipass):
         """Enter memory management mode.
 
         Keyword argument:
-            timeout -- how long to wait for user to complete entering pin 
+            timeout -- how long to wait for user to complete entering pin
                     (default 20000).
 
         Return true/false on success/failure. May raise RuntimeError
@@ -153,7 +150,7 @@ class MooltipassClient(_Mooltipass):
         return super().write_data_context(ext_data, callback)
 
     def read_data_context(self, callback=None):
-        """Read data from context. 
+        """Read data from context.
 
         Arguments:
             callback    -- Callback function which must accept a tuple
@@ -454,7 +451,7 @@ class ChildNode(Node):
             next_child_node.prev_child_addr = self.prev_child_addr
             next_child_node.write()
 
-        # Fill the node so it is not considered an oprhan
+        # Fill the node so it is not considered an orphan
         self.raw = array('B', b'\xff'*132)
         self.write()
 
@@ -487,7 +484,7 @@ class DataNode(Node):
         # child nodes is when we're deleting all child nodes so I don't believe
         # this is necessary.
 
-        # Fill the node so it is not considered an oprhan
+        # Fill the node so it is not considered an orphan
         self.raw = array('B', b'\xff'*132)
         self.write()
 
