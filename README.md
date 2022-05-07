@@ -7,14 +7,11 @@ management utilities.
 
 
 ## Installation & usage
-You can install or upgrade to the lastest stable release of mooltipy using pip.
-
+Download this latest repository from Github.
 ```
-# Install
-$ sudo pip install mooltipy
-
-# Upgrade
-$ sudo pip install mooltipy --upgrade
+$ wget https://github.com/oSquat/mooltipy/archive/refs/heads/master.zip
+$ unzip ./master.zip
+$ sudo python3 ./mooltipy-master/setup.py install
 ```
 
 ### Manage login contexts
@@ -176,9 +173,3 @@ mootipass.do_some_stuff()
 
 Check out the MooltipassClient and Mooltipass classes to see what's implemented
 and see each utility as excellent examples of how to interact with the device.
-
-## Support
-Problems, questions, comments, feature requests? We're available in the
-[Mooltipass subreddit](http://reddit.com/r/mooltipass) and idle on freenode
-as vic or codegor* in #mooltipass. E-mailing mooltipy [at my domain] 
-oSquat.com will reach me very quickly too.
